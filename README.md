@@ -73,5 +73,16 @@ endpoint is a parameter in the URL (`?endpoint=`), so the same page reads a loca
 
 ## Deployment
 
-Envio's hosted service deploys from this repository (GitHub app, branch `main`, config `config.yaml`), or from the
-command line with `envio-cloud`. The endpoint, once deployed, is written here with the date it was read.
+Envio's hosted service deploys this repository from the branch `envio` (config `config.yaml`, root `./`, Development
+plan; every push to that branch makes a new deployment with a new endpoint id, so `main` moves ahead for anything
+that is not the indexer). Deployment `796f011` of 23 Sep 2026, 07:44 CEST, HyperSync, synced to the head in one
+minute, endpoint public:
+
+```
+https://indexer.dev.hyperindex.xyz/8213f52/v1/graphql
+```
+
+Read at 05:49 UTC the same day: `_meta` at the head (progress block equal to the source block), 84 events processed;
+`scripts/compare-counts.ts` against `artifacts/counts-on-chain-rpc1.json`: every line the same;
+`scripts/check-gifts-on-chain.ts`: every gift equal to its contract's storage (`artifacts/hosted-2026-09-23/`).
+The page reads that endpoint by default: https://redgnad.github.io/Viky-index/page/ (GitHub Pages from `main`).

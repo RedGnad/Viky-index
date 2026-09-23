@@ -37,7 +37,7 @@
   <p class="lead">What Viky's contracts said, gift by gift and day by day, read from the Envio index of their own events. AUSD amounts are shown with six decimals, as the contracts count them.</p>
   <form id="endpointForm">
     <label for="endpoint">GraphQL endpoint</label>
-    <input id="endpoint" type="url" placeholder="http://localhost:8080/v1/graphql" required>
+    <input id="endpoint" type="url" placeholder="https://indexer.dev.hyperindex.xyz/8213f52/v1/graphql" required>
     <button type="submit">Read</button>
     <span id="status"></span>
   </form>
@@ -63,7 +63,7 @@
   const status = document.getElementById("status");
   let remembered = "";
   try { remembered = localStorage.getItem("viky-index-endpoint") || ""; } catch (_) {}
-  input.value = params.get("endpoint") || remembered || "http://localhost:8080/v1/graphql";
+  input.value = params.get("endpoint") || remembered || "https://indexer.dev.hyperindex.xyz/8213f52/v1/graphql";
 
   const ausd = (v) => (Number(BigInt(v || 0)) / 1e6).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 6 });
   const short = (a) => a ? a.slice(0, 6) + "…" + a.slice(-4) : "";
@@ -107,7 +107,7 @@
     try { localStorage.setItem("viky-index-endpoint", endpoint); } catch (_) {}
     try { await read(endpoint); } catch (error) { status.textContent = `could not read: ${error.message}`; status.className = "error"; }
   });
-  if (params.get("endpoint") || remembered) document.getElementById("endpointForm").requestSubmit();
+  document.getElementById("endpointForm").requestSubmit();
 </script>
 </body>
 </html>

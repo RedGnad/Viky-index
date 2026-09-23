@@ -1,0 +1,54 @@
+hosted endpoint: https://indexer.dev.hyperindex.xyz/8213f52/v1/graphql (deployment 796f011, read 2026-09-23T05:50:02Z)
+daily gift 1 on 0xe04cd59bb93765333200a9da01df83149d4c4d67 (index status: finalised)
+    amount                       chain     20000000   index     20000000   same
+    withdrawn by recipient       chain      2857142   index      2857142   same
+    refunded to funder           chain     14285710   index     14285710   same
+    credited days                chain            1   index            1   same
+    drained days                 chain            6   index            6   same
+    earned (credited x perDay)   chain      2857142   index      2857142   same
+    cancelled                    chain        false   index        false   same
+    finalised                    chain         true   index         true   same
+    refundable still held: 17142858 (not an event sum; shown for the reader)
+daily gift 2 on 0x995ab09d8b20511d057e9e87d00fa1f41fc0e233 (index status: finalised)
+    amount                       chain      1000000   index      1000000   same
+    withdrawn by recipient       chain            0   index            0   same
+    refunded to funder           chain       857143   index       857143   same
+    credited days                chain            1   index            1   same
+    drained days                 chain            6   index            6   same
+    earned (credited x perDay)   chain       142857   index       142857   same
+    cancelled                    chain        false   index        false   same
+    finalised                    chain         true   index         true   same
+    refundable still held: 857143 (not an event sum; shown for the reader)
+daily gift 3 on 0x995ab09d8b20511d057e9e87d00fa1f41fc0e233 (index status: claimed)
+    amount                       chain      5000000   index      5000000   same
+    withdrawn by recipient       chain            0   index            0   same
+    refunded to funder           chain      3571425   index      3571425   same
+    credited days                chain            0   index            0   same
+    drained days                 chain            5   index            5   same
+    earned (credited x perDay)   chain            0   index            0   same
+    cancelled                    chain        false   index        false   same
+    finalised                    chain        false   index        false   same
+    refundable still held: 3571425 (not an event sum; shown for the reader)
+milestone gift 1000000 on 0x8dc281ac8a1c789fdb65a063b9225e98ec522f0e (index status: claimed)
+    amount                       chain      1000000   index      1000000   same
+    withdrawn by recipient       chain            0   index            0   same
+    refunded to funder           chain            0   index            0   same
+    earned                       chain            0   index            0   same
+    cancelled                    chain        false   index        false   same
+    refundable still held: 0 (not an event sum; shown for the reader)
+milestone gift 1000001 on 0x8dc281ac8a1c789fdb65a063b9225e98ec522f0e (index status: funded)
+    amount                       chain      1000000   index      1000000   same
+    withdrawn by recipient       chain            0   index            0   same
+    refunded to funder           chain            0   index            0   same
+    earned                       chain            0   index            0   same
+    cancelled                    chain        false   index        false   same
+    refundable still held: 0 (not an event sum; shown for the reader)
+milestone gift 1000002 on 0x8dc281ac8a1c789fdb65a063b9225e98ec522f0e (index status: claimed)
+    amount                       chain      1000000   index      1000000   same
+    withdrawn by recipient       chain            0   index            0   same
+    refunded to funder           chain            0   index            0   same
+    earned                       chain            0   index            0   same
+    cancelled                    chain        false   index        false   same
+    refundable still held: 0 (not an event sum; shown for the reader)
+every line matches the contracts' storage
+exit=0

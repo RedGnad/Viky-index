@@ -37,7 +37,11 @@ async function giftsFromIndex(): Promise<GiftRow[]> {
   if (endpoint) {
     const response = await fetch(endpoint, {
       method: "POST",
-      headers: { "content-type": "application/json", "x-hasura-admin-secret": process.env.HASURA_ADMIN_SECRET ?? "testing" },
+      headers: {
+        "content-type": "application/json",
+        // the local Hasura wants its admin secret; the hosted endpoint is public and rejects the header
+        ...(process.env.HASURA_ADMIN_SECRET || endpoint.includes("localhost") ? { "x-hasura-admin-secret": process.env.HASURA_ADMIN_SECRET ?? "testing" } : {}),
+      },
       body: JSON.stringify({ query: "{ Gift(order_by: {createdAt: asc}) { id kind status amount fundedAmount daysEarned daysReturned amountEarned amountReturned amountWithdrawn amountRefunded } }" }),
     });
     return ((await response.json()) as { data: { Gift: GiftRow[] } }).data.Gift;

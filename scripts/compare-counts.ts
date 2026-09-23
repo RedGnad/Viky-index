@@ -18,7 +18,9 @@ function argument(name: string, fallback: string): string {
 
 const countsPath = argument("counts", "artifacts/counts-on-chain.json");
 const endpoint = argument("endpoint", "http://localhost:8080/v1/graphql");
-const adminSecret = process.env.HASURA_ADMIN_SECRET ?? "testing";
+// The local Hasura wants its admin secret ("testing", as `envio dev` sets it); the hosted endpoint is public and
+// rejects the header, so it is sent only for a local endpoint or when HASURA_ADMIN_SECRET is set.
+const adminSecret = process.env.HASURA_ADMIN_SECRET ?? (endpoint.includes("localhost") ? "testing" : undefined);
 
 type OnChain = {
   from_block: number;
@@ -66,7 +68,7 @@ function onChainCount(data: OnChain, addresses: string[], keys: (keyof typeof si
 async function graphql<T>(query: string): Promise<T> {
   const response = await fetch(endpoint, {
     method: "POST",
-    headers: { "content-type": "application/json", "x-hasura-admin-secret": adminSecret },
+    headers: { "content-type": "application/json", ...(adminSecret ? { "x-hasura-admin-secret": adminSecret } : {}) },
     body: JSON.stringify({ query }),
   });
   const body = (await response.json()) as { data?: T; errors?: unknown };
@@ -74,11 +76,15 @@ async function graphql<T>(query: string): Promise<T> {
   return body.data;
 }
 
+// Rows are counted by listing their ids: the hosted endpoint exposes no `_aggregate` fields to the public role
+// (checked 23 Sep 2026), and these tables hold tens of rows, not millions.
+const LIMIT = 100000;
 async function count(entity: string, where = ""): Promise<number> {
-  const data = await graphql<Record<string, { aggregate: { count: number } }>>(
-    `{ ${entity}_aggregate${where ? `(where: ${where})` : ""} { aggregate { count } } }`,
-  );
-  return data[`${entity}_aggregate`].aggregate.count;
+  const args = [where ? `where: ${where}` : "", `limit: ${LIMIT}`].filter(Boolean).join(", ");
+  const data = await graphql<Record<string, { id: string }[]>>(`{ ${entity}(${args}) { id } }`);
+  const rows = data[entity];
+  if (rows.length >= LIMIT) throw new Error(`${entity}: more than ${LIMIT} rows, raise LIMIT`);
+  return rows.length;
 }
 
 async function main(): Promise<void> {
