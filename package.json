@@ -4,6 +4,10 @@
   "private": true,
   "description": "Viky's gifts, days, payouts and refunds on Monad, indexed from the contracts' own events with Envio HyperIndex",
   "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=22.0.0"
+  },
   "scripts": {
     "codegen": "envio codegen",
     "dev": "envio dev",
@@ -13,8 +17,10 @@
     "count:chain": "python3 scripts/count-on-chain.py",
     "compare:counts": "tsx scripts/compare-counts.ts"
   },
+  "dependencies": {
+    "envio": "3.12.1"
+  },
   "devDependencies": {
-    "envio": "3.12.1",
     "ethers": "6.17.0",
     "tsx": "4.20.6",
     "typescript": "^5.9.3"

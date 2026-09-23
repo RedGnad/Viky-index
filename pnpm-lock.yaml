@@ -7,10 +7,11 @@ settings:
 importers:
 
   .:
-    devDependencies:
+    dependencies:
       envio:
         specifier: 3.12.1
         version: 3.12.1(react-dom@19.3.0(react@19.2.5))(supports-color@8.1.1)(typescript@5.9.3)
+    devDependencies:
       ethers:
         specifier: 6.17.0
         version: 6.17.0
