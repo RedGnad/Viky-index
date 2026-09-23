@@ -1,0 +1,202 @@
+{
+  "rpc": "https://rpc.monad.xyz",
+  "read_at": "2026-09-23T04:56:30Z",
+  "from_block": 103000000,
+  "to_block": 107227204,
+  "head_at_start": 107227204,
+  "window": 100,
+  "calls": 42273,
+  "seconds": 1283.1,
+  "total_logs": 102,
+  "per_address": {
+    "0xe04cd59bb93765333200a9da01df83149d4c4d67": {
+      "0x8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e0": {
+        "count": 3,
+        "first_block": 103644003,
+        "last_block": 106300728
+      },
+      "0xf5d29cc25af3288b3b463b5434bba7c003f16df427e0de0d96ff2b0f31c2e229": {
+        "count": 2,
+        "first_block": 103644008,
+        "last_block": 103779484
+      },
+      "0xae839565b74a95bdf72da1e1fd680e746316fe6293600baec220c8ceab210f58": {
+        "count": 1,
+        "first_block": 103644012,
+        "last_block": 103644012
+      },
+      "0x09a38bb84f65cd1311bc7a2c6d2a168b0a48cd92b5b8bebcde226df51304e5fc": {
+        "count": 1,
+        "first_block": 103644016,
+        "last_block": 103644016
+      },
+      "0x23678b70a891d243f412669c65e31633aca00f81aa6dfb9b75d798652830830f": {
+        "count": 1,
+        "first_block": 103756970,
+        "last_block": 103756970
+      },
+      "0x1a7b994956ab1794da21a33fc228f9f6d9a5e492ee9f063908cbbb00eb84ab0c": {
+        "count": 1,
+        "first_block": 103756970,
+        "last_block": 103756970
+      },
+      "0xb8c591be1b81bbbab75d227e74047ce00d28805b341aea3327065d743a0b97c0": {
+        "count": 1,
+        "first_block": 103766017,
+        "last_block": 103766017
+      },
+      "0xed2c2622418da64a74c8b3e85e6c7d83d5132b30960d4a1ba9a7f5bf7c31c606": {
+        "count": 1,
+        "first_block": 103888278,
+        "last_block": 103888278
+      },
+      "0x4061ba8125aca46f5245610035ee2f6df438a11d0f2d0bc4a8b6521ad0189c80": {
+        "count": 2,
+        "first_block": 103888278,
+        "last_block": 104040581
+      },
+      "0xb8556eb7600d21743a7f6c70f198fc18eddef581040aeeab3ca6fa9c2b8d3725": {
+        "count": 1,
+        "first_block": 104636947,
+        "last_block": 104636947
+      },
+      "0x6d071b5daf9ddcef341aa472ca7ad1dc15f1eb7f64564de7f3c42e13f86c4c87": {
+        "count": 6,
+        "first_block": 104892532,
+        "last_block": 106322623
+      },
+      "0x99a0aeb71aaa3e78e65febdbb5b0fa9df304adb5145394041530a39063c1cb00": {
+        "count": 5,
+        "first_block": 104976670,
+        "last_block": 106120607
+      },
+      "0x46fc06ea6a864170930b44a40cde0b5cbdbc03023a95e17c6174a5ce2cd6c40d": {
+        "count": 1,
+        "first_block": 106322626,
+        "last_block": 106322626
+      }
+    },
+    "0x995ab09d8b20511d057e9e87d00fa1f41fc0e233": {
+      "0x8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e0": {
+        "count": 3,
+        "first_block": 103970877,
+        "last_block": 106300697
+      },
+      "0xf5d29cc25af3288b3b463b5434bba7c003f16df427e0de0d96ff2b0f31c2e229": {
+        "count": 3,
+        "first_block": 103970881,
+        "last_block": 107214315
+      },
+      "0xae839565b74a95bdf72da1e1fd680e746316fe6293600baec220c8ceab210f58": {
+        "count": 1,
+        "first_block": 103970885,
+        "last_block": 103970885
+      },
+      "0x09a38bb84f65cd1311bc7a2c6d2a168b0a48cd92b5b8bebcde226df51304e5fc": {
+        "count": 1,
+        "first_block": 103970889,
+        "last_block": 103970889
+      },
+      "0x23678b70a891d243f412669c65e31633aca00f81aa6dfb9b75d798652830830f": {
+        "count": 2,
+        "first_block": 103981967,
+        "last_block": 105146567
+      },
+      "0x1a7b994956ab1794da21a33fc228f9f6d9a5e492ee9f063908cbbb00eb84ab0c": {
+        "count": 2,
+        "first_block": 103981967,
+        "last_block": 105146567
+      },
+      "0xb8c591be1b81bbbab75d227e74047ce00d28805b341aea3327065d743a0b97c0": {
+        "count": 2,
+        "first_block": 103996753,
+        "last_block": 105146923
+      },
+      "0xed2c2622418da64a74c8b3e85e6c7d83d5132b30960d4a1ba9a7f5bf7c31c606": {
+        "count": 2,
+        "first_block": 103996794,
+        "last_block": 105147387
+      },
+      "0x4061ba8125aca46f5245610035ee2f6df438a11d0f2d0bc4a8b6521ad0189c80": {
+        "count": 3,
+        "first_block": 103996794,
+        "last_block": 105147387
+      },
+      "0x6d071b5daf9ddcef341aa472ca7ad1dc15f1eb7f64564de7f3c42e13f86c4c87": {
+        "count": 11,
+        "first_block": 104976674,
+        "last_block": 106978735
+      },
+      "0x99a0aeb71aaa3e78e65febdbb5b0fa9df304adb5145394041530a39063c1cb00": {
+        "count": 11,
+        "first_block": 104976678,
+        "last_block": 106978740
+      },
+      "0x46fc06ea6a864170930b44a40cde0b5cbdbc03023a95e17c6174a5ce2cd6c40d": {
+        "count": 1,
+        "first_block": 106406734,
+        "last_block": 106406734
+      }
+    },
+    "0x8a1790dfd10cf1599bdaed5ec8bb46b2a6eb6223": {
+      "0x8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e0": {
+        "count": 3,
+        "first_block": 105185369,
+        "last_block": 106300766
+      },
+      "0xe710533147317b0b4484a3dd41f3b72d652914a542a38835679793ab4dc0a0e5": {
+        "count": 1,
+        "first_block": 105185373,
+        "last_block": 105185373
+      },
+      "0x452a5afbe062050de33ff43d2f66cca3d37117d3c252e5980dbcce5c7931ce25": {
+        "count": 1,
+        "first_block": 105357531,
+        "last_block": 105357531
+      }
+    },
+    "0x8dc281ac8a1c789fdb65a063b9225e98ec522f0e": {
+      "0x8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e0": {
+        "count": 3,
+        "first_block": 105654716,
+        "last_block": 106300749
+      },
+      "0x49921cd4daee6119b0bbf17fd6c40cc942f31e49366cd63b4c50c016bdc228af": {
+        "count": 14,
+        "first_block": 105654720,
+        "last_block": 107214268
+      },
+      "0xae839565b74a95bdf72da1e1fd680e746316fe6293600baec220c8ceab210f58": {
+        "count": 1,
+        "first_block": 105654735,
+        "last_block": 105654735
+      },
+      "0xa8e1af2ac5d0d9d9b7a3073a16a2ab35a76ddfc0b14371c0b933d95017883eda": {
+        "count": 1,
+        "first_block": 105654739,
+        "last_block": 105654739
+      },
+      "0x55cad2b40498b2addae31e60499c1a2b229342b67a7350a74e0e125648703239": {
+        "count": 3,
+        "first_block": 105981181,
+        "last_block": 106027758
+      },
+      "0x1a7b994956ab1794da21a33fc228f9f6d9a5e492ee9f063908cbbb00eb84ab0c": {
+        "count": 3,
+        "first_block": 105981181,
+        "last_block": 106027758
+      },
+      "0xb8c591be1b81bbbab75d227e74047ce00d28805b341aea3327065d743a0b97c0": {
+        "count": 2,
+        "first_block": 105981620,
+        "last_block": 106029014
+      },
+      "0xb5a4e26073cbd3858bec5f605ea63d0cff0aecb4a5f39cdd7dd2c3d4019018de": {
+        "count": 2,
+        "first_block": 106018824,
+        "last_block": 106051452
+      }
+    }
+  },
+  "failures": []
+}

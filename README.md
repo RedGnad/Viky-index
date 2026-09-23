@@ -16,7 +16,7 @@ Four contracts on Monad mainnet (chain 143), addresses and deployment blocks rea
 | Contract | Address | From block |
 |---|---|---|
 | `GiftEscrow`, the daily contract | `0x995Ab09d8B20511d057E9E87D00fa1f41fC0e233` | 103,970,877 (deployment, 11 Sep 2026) |
-| `GiftEscrow`, the earlier contract still running gift 1 | `0xE04CD59bB93765333200a9da01df83149D4C4d67` | its first event is before 103,970,877; `scripts/count-on-chain.py` reports it |
+| `GiftEscrow`, the earlier contract still running gift 1 | `0xE04CD59bB93765333200a9da01df83149D4C4d67` | 103,644,003 (its first event, read from the chain) |
 | `MilestoneGift` | `0x8dc281Ac8a1c789fdb65a063b9225E98eC522F0e` | 105,654,716 (deployment, 17 Sep 2026) |
 | `ExitRouter` | `0x8a1790DfD10CF1599bDaeD5eC8BB46B2A6eB6223` | 105,185,369 (deployment, 16 Sep 2026) |
 
@@ -51,13 +51,16 @@ pnpm dev                          # Docker: Postgres, Hasura at http://localhost
 
 `config.yaml` reads the chain through HyperSync and needs `ENVIO_API_TOKEN` in `.env`
 ([create one](https://envio.dev/app/api-tokens); requests without a token are refused with 401).
-`config.rpc.yaml` is the same indexer over the public RPC `https://rpc.monad.xyz`, which limits `eth_getLogs` to 100
-blocks per call (measured 23 Sep 2026), so it is slow and needs no token: `ENVIO_CONFIG=config.rpc.yaml pnpm dev`.
+`config.rpc.yaml` is the same indexer over the public RPC `https://rpc1.monad.xyz`, which answered the whole history in one
+call on 23 Sep 2026 (`https://rpc.monad.xyz` caps `eth_getLogs` at 100 blocks); it needs no token:
+`ENVIO_CONFIG=config.rpc.yaml pnpm dev`.
 
 ## Measured against the chain, before any aggregate is called right
 
-`scripts/count-on-chain.py` walks the public RPC in 100-block windows and counts every event of the four addresses,
-per event topic, with the first and last block of each (`artifacts/counts-on-chain.json`).
+`scripts/count-on-chain.py` counts every event of the four addresses, per event topic, with the first and last block of
+each, from a public RPC in windows of a chosen size: 100 blocks on `rpc.monad.xyz` (42,273 calls,
+`artifacts/counts-on-chain.json`) and 100,000 blocks on `rpc1.monad.xyz` (`artifacts/counts-on-chain-rpc1.json`); two
+endpoints and two window sizes that agree are the check.
 `scripts/compare-counts.ts` asks the running indexer the same counts through GraphQL and prints both side by side; a
 line that differs is a bug to read, not a number to publish. The records of the runs are in `artifacts/`.
 

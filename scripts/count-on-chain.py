@@ -8,6 +8,7 @@ the last block; and the total. The indexer's aggregates are checked against this
 right (scripts/compare-counts.py).
 
 Usage: python3 scripts/count-on-chain.py [--from 103000000] [--to latest] [--out artifacts/counts-on-chain.json]
+       [--rpc https://rpc1.monad.xyz --window 100000]   (rpc1.monad.xyz answers wide ranges; measured 23 Sep 2026)
 """
 import argparse
 import concurrent.futures
@@ -27,6 +28,7 @@ ADDRESSES = [
     "0x8a1790DfD10CF1599bDaeD5eC8BB46B2A6eB6223",  # ExitRouter
 ]
 WINDOW = 100
+USER_AGENT = "viky-index/0.1 (+https://github.com/RedGnad/Viky-index)"
 WORKERS = 4  # sixteen workers drew HTTP 429 after a minute on 23 Sep 2026; four hold at about 10 calls a second
 
 
@@ -35,7 +37,8 @@ def rpc(method, params, attempts=40):
     last = None
     for attempt in range(attempts):
         try:
-            req = urllib.request.Request(RPC, data=body, headers={"content-type": "application/json"})
+            # rpc1.monad.xyz answers Python's default agent with Cloudflare's "error code: 1010" (403); a named agent passes.
+            req = urllib.request.Request(RPC, data=body, headers={"content-type": "application/json", "User-Agent": USER_AGENT})
             answer = json.load(urllib.request.urlopen(req, timeout=30))
             if "result" in answer:
                 return answer["result"]
@@ -43,7 +46,9 @@ def rpc(method, params, attempts=40):
         except urllib.error.HTTPError as error:  # 429: the provider's rate limit; wait what it says, or 5 s
             last = f"HTTP {error.code}"
             if error.code == 429:
-                time.sleep(float(error.headers.get("Retry-After") or 5))
+                wait = float(error.headers.get("Retry-After") or 5)
+                print(f"  429 from {RPC}, waiting {wait:.0f} s (attempt {attempt + 1})", flush=True)
+                time.sleep(wait)
                 continue
         except Exception as error:  # network hiccups are retried, then reported
             last = str(error)
@@ -57,11 +62,16 @@ def logs_of(window):
 
 
 def main():
+    global RPC, WINDOW, WORKERS
     parser = argparse.ArgumentParser()
     parser.add_argument("--from", dest="frm", type=int, default=103_000_000)
     parser.add_argument("--to", dest="to", default="latest")
     parser.add_argument("--out", default="artifacts/counts-on-chain.json")
+    parser.add_argument("--rpc", default=RPC)
+    parser.add_argument("--window", type=int, default=WINDOW)
+    parser.add_argument("--workers", type=int, default=WORKERS, help="parallel calls; rpc1.monad.xyz throttles wide windows above one")
     args = parser.parse_args()
+    RPC, WINDOW, WORKERS = args.rpc, args.window, args.workers
     head = int(rpc("eth_blockNumber", []), 16)
     to = head if args.to == "latest" else int(args.to)
     windows = [(f, min(f + WINDOW - 1, to)) for f in range(args.frm, to + 1, WINDOW)]
