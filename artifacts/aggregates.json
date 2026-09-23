@@ -1,0 +1,18 @@
+{
+    "data": {
+        "_meta": [
+            {
+                "chainId": 143,
+                "progressBlock": -1,
+                "sourceBlock": 0,
+                "eventsProcessed": 0,
+                "isReady": false
+            }
+        ],
+        "GlobalStat": [],
+        "DayStat": [],
+        "ConditionStat": [],
+        "PayoutStat": [],
+        "Gift": []
+    }
+}

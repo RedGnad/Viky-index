@@ -1,0 +1,18 @@
+
+> viky-index@0.1.0 compare:counts /run-index/Viky-index
+> tsx scripts/compare-counts.ts
+
+chain: artifacts/counts-on-chain.json (blocks 103000000 to 107227204, read 2026-09-23T04:56:30Z); indexer: http://localhost:8080/v1/graphql
+what                                           chain   indexer  verdict
+gifts created (daily)                              3         0  DIFFERS
+gifts created (milestone)                          3         0  DIFFERS
+check-ins accepted                                 5         0  DIFFERS
+days drained                                      17         0  DIFFERS
+milestones reached                                 0         0  same
+withdrawals                                        1         0  DIFFERS
+refunds (unearned, cancelled, expired)            16         0  DIFFERS
+exits                                              1         0  DIFFERS
+goals registered                                  19         0  DIFFERS
+exchanges allowed or revoked (distinct)            -         0  (not counted on chain)
+events indexed (all configured kinds)             84         0  DIFFERS
+ ELIFECYCLE  Command failed with exit code 1.
