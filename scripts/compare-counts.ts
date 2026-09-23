@@ -105,10 +105,12 @@ async function main(): Promise<void> {
   );
   await push("exits", onChainCount(chain, ROUTER, ["exited"]), count("Exit"));
   await push(
-    "goals registered",
+    "goal registrations (events)",
     onChainCount(chain, DAILY, ["dailyGoalRegistered"]) + onChainCount(chain, MILESTONE, ["milestoneGoalRegistered"]),
-    count("Goal"),
+    count("GoalRegistration"),
   );
+  // Goal keeps one row per contract and goal type; a goal registered twice counts once here, so no chain figure.
+  await push("goals (distinct contract and goal type)", NaN, count("Goal"));
   await push("exchanges allowed or revoked (distinct)", NaN, count("Exchange"));
 
   const indexedKinds: (keyof typeof signatures)[] = [

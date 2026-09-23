@@ -133,6 +133,16 @@ indexer.onEvent({ contract: "GiftEscrow", event: "GoalRegistered" }, async ({ ev
     shape: undefined,
     registeredAt: timestampOf(event.block.timestamp),
   });
+  context.GoalRegistration.set({
+    id: eventKey(event.chainId, event.block.number, event.logIndex),
+    contract,
+    goalType: Number(event.params.goalType),
+    providerId: event.params.providerId,
+    shape: undefined,
+    at: timestampOf(event.block.timestamp),
+    block: BigInt(event.block.number),
+    transaction: event.transaction.hash,
+  });
   await countOnly(context, event.block.timestamp);
 });
 
@@ -345,6 +355,16 @@ indexer.onEvent({ contract: "MilestoneGift", event: "GoalRegistered" }, async ({
     providerId: event.params.providerId,
     shape: Number(event.params.shape),
     registeredAt: timestampOf(event.block.timestamp),
+  });
+  context.GoalRegistration.set({
+    id: eventKey(event.chainId, event.block.number, event.logIndex),
+    contract,
+    goalType: Number(event.params.goalType),
+    providerId: event.params.providerId,
+    shape: Number(event.params.shape),
+    at: timestampOf(event.block.timestamp),
+    block: BigInt(event.block.number),
+    transaction: event.transaction.hash,
   });
   await countOnly(context, event.block.timestamp);
 });

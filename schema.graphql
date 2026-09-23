@@ -146,6 +146,19 @@ type Goal {
   registeredAt: Timestamp!
 }
 
+# One row per GoalRegistered event; Goal keeps the latest registration per contract and goal type (a goal can be
+# registered again with another provider id, as the earlier daily contract did for goal 1 on 10 Sep 2026).
+type GoalRegistration {
+  id: ID! # "<chainId>-<block>-<logIndex>"
+  contract: String!
+  goalType: Int!
+  providerId: String!
+  shape: Int
+  at: Timestamp!
+  block: BigInt!
+  transaction: String!
+}
+
 type Exchange {
   id: ID! # exchange address
   allowed: Boolean!
