@@ -15,7 +15,8 @@
     "stop": "envio stop",
     "typecheck": "tsc --noEmit",
     "count:chain": "python3 scripts/count-on-chain.py",
-    "compare:counts": "tsx scripts/compare-counts.ts"
+    "compare:counts": "tsx scripts/compare-counts.ts",
+    "check:gifts": "tsx scripts/check-gifts-on-chain.ts"
   },
   "dependencies": {
     "envio": "3.12.1"

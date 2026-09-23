@@ -62,7 +62,9 @@ each, from a public RPC in windows of a chosen size: 100 blocks on `rpc.monad.xy
 `artifacts/counts-on-chain.json`) and 100,000 blocks on `rpc1.monad.xyz` (`artifacts/counts-on-chain-rpc1.json`); two
 endpoints and two window sizes that agree are the check.
 `scripts/compare-counts.ts` asks the running indexer the same counts through GraphQL and prints both side by side; a
-line that differs is a bug to read, not a number to publish. The records of the runs are in `artifacts/`.
+line that differs is a bug to read, not a number to publish. `scripts/check-gifts-on-chain.ts` sets each gift's indexed
+sums (days credited and drained, amounts withdrawn, refunded, earned) beside the contract's own storage, read with
+`getGift`. The records of the runs are in `artifacts/run-<date>/`.
 
 ## The page
 
