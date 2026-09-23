@@ -61,11 +61,14 @@ chains:
         # rpc1.monad.xyz refuses unnamed agents (Cloudflare error 1010, measured 23 Sep 2026); a named one passes.
         headers:
           User-Agent: viky-index/0.1 (+https://github.com/RedGnad/Viky-index)
-        initial_block_interval: 10000
-        backoff_multiplicative: 0.8
-        acceleration_additive: 10000
+        # rpc1 limits the rate of wide calls, not their size (43 sequential 100,000-block calls took 9 s with one 429 on
+        # 23 Sep 2026), so the batch stays at 100,000 and a 429 costs a two-second wait; shrinking the batch (0.8 a
+        # miss, +10,000 a hit) had the sync crawling at 300 blocks a second on the VM.
+        initial_block_interval: 100000
+        backoff_multiplicative: 1.0
+        acceleration_additive: 0
         interval_ceiling: 100000
-        backoff_millis: 1000
+        backoff_millis: 2000
         query_timeout_millis: 30000
     contracts:
       - name: GiftEscrow
