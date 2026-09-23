@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Viky on Monad</title>
+<meta name="description" content="Viky's gifts, days, payouts and refunds on Monad, read from the Envio index of the contracts' own events.">
+<style>
+  :root { --bg: #fbfaf7; --fg: #1d1d1b; --muted: #6b6a66; --line: #e3e0d8; --accent: #2f5d50; --card: #ffffff; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #16161a; --fg: #ececea; --muted: #a09f9a; --line: #2c2c31; --accent: #8fd1bb; --card: #1f1f24; } }
+  :root[data-theme="dark"] { --bg: #16161a; --fg: #ececea; --muted: #a09f9a; --line: #2c2c31; --accent: #8fd1bb; --card: #1f1f24; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--fg); font: 16px/1.5 -apple-system, "Segoe UI", Roboto, sans-serif; }
+  main { max-width: 960px; margin: 0 auto; padding: 24px 16px 48px; }
+  h1 { font-size: 1.6rem; margin: 0 0 4px; }
+  h2 { font-size: 1.1rem; margin: 32px 0 8px; }
+  p.lead { color: var(--muted); margin: 0 0 16px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; }
+  .card .k { font-size: 0.8rem; color: var(--muted); }
+  .card .v { font-size: 1.4rem; font-variant-numeric: tabular-nums; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+  th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  td.n, th.n { text-align: right; font-variant-numeric: tabular-nums; }
+  code { font-size: 0.85em; word-break: break-all; }
+  .wrap { overflow-x: auto; }
+  form { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin: 12px 0; }
+  input[type=url] { flex: 1 1 320px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--card); color: var(--fg); }
+  button { padding: 8px 14px; border: 1px solid var(--accent); border-radius: 8px; background: var(--accent); color: #fff; }
+  #status { color: var(--muted); font-size: 0.9rem; }
+  .error { color: #b3261e; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Viky on Monad</h1>
+  <p class="lead">What Viky's contracts said, gift by gift and day by day, read from the Envio index of their own events. AUSD amounts are shown with six decimals, as the contracts count them.</p>
+  <form id="endpointForm">
+    <label for="endpoint">GraphQL endpoint</label>
+    <input id="endpoint" type="url" placeholder="http://localhost:8080/v1/graphql" required>
+    <button type="submit">Read</button>
+    <span id="status"></span>
+  </form>
+
+  <h2>The whole</h2>
+  <div class="grid" id="global"></div>
+
+  <h2>Per day (UTC)</h2>
+  <div class="wrap"><table id="days"><thead><tr><th>Day</th><th class="n">Gifts created</th><th class="n">Days earned</th><th class="n">Days returned</th><th class="n">Milestones</th><th class="n">Earned</th><th class="n">Returned</th><th class="n">Withdrawn</th><th class="n">Refunded</th><th class="n">Exits</th></tr></thead><tbody></tbody></table></div>
+
+  <h2>Per condition</h2>
+  <div class="wrap"><table id="conditions"><thead><tr><th>Contract</th><th class="n">Goal</th><th>Kind</th><th class="n">Gifts</th><th class="n">Claimed</th><th class="n">Days earned</th><th class="n">Days returned</th><th class="n">Milestones</th><th class="n">Earned</th><th class="n">Returned</th><th class="n">Refunded</th></tr></thead><tbody></tbody></table></div>
+
+  <h2>Payouts by currency and rail</h2>
+  <div class="wrap"><table id="payouts"><thead><tr><th>Coin out</th><th>Exchange (rail)</th><th class="n">Exits</th><th class="n">AUSD in</th><th class="n">Out (base units)</th></tr></thead><tbody></tbody></table></div>
+
+  <h2>Last gifts</h2>
+  <div class="wrap"><table id="gifts"><thead><tr><th>Gift</th><th>Kind</th><th class="n">Goal</th><th>Status</th><th class="n">Amount</th><th class="n">Days earned</th><th class="n">Days returned</th><th class="n">Earned</th><th class="n">Refunded</th><th>Created</th></tr></thead><tbody></tbody></table></div>
+</main>
+<script>
+  const params = new URLSearchParams(location.search);
+  const input = document.getElementById("endpoint");
+  const status = document.getElementById("status");
+  let remembered = "";
+  try { remembered = localStorage.getItem("viky-index-endpoint") || ""; } catch (_) {}
+  input.value = params.get("endpoint") || remembered || "http://localhost:8080/v1/graphql";
+
+  const ausd = (v) => (Number(BigInt(v || 0)) / 1e6).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 6 });
+  const short = (a) => a ? a.slice(0, 6) + "…" + a.slice(-4) : "";
+  const cell = (text, numeric) => { const td = document.createElement("td"); td.textContent = text; if (numeric) td.className = "n"; return td; };
+  const row = (cells) => { const tr = document.createElement("tr"); for (const [text, numeric] of cells) tr.appendChild(cell(text, numeric)); return tr; };
+  const fill = (tableId, rows) => { const body = document.querySelector(`#${tableId} tbody`); body.replaceChildren(...rows); if (!rows.length) body.appendChild(row([["nothing yet", false]])); };
+
+  const QUERY = `{
+    GlobalStat(where: {id: {_eq: "global"}}) { giftsCreated giftsFunded giftsClaimed daysEarned daysReturned milestonesReached amountEarned amountReturned amountWithdrawn amountRefunded exits exitAmountIn eventsIndexed }
+    DayStat(order_by: {id: desc}, limit: 60) { id giftsCreated daysEarned daysReturned milestonesReached amountEarned amountReturned amountWithdrawn amountRefunded exits }
+    ConditionStat(order_by: {id: asc}) { contract goalType kind giftsCreated giftsClaimed daysEarned daysReturned milestonesReached amountEarned amountReturned amountRefunded }
+    PayoutStat(order_by: {exits: desc}) { tokenOut exchange exits amountIn amountOut }
+    Gift(order_by: {createdAt: desc}, limit: 25) { contract giftId kind goalType status amount daysEarned daysReturned amountEarned amountRefunded createdAt }
+  }`;
+
+  async function read(endpoint) {
+    status.textContent = "reading…"; status.className = "";
+    const headers = { "content-type": "application/json" };
+    const response = await fetch(endpoint, { method: "POST", headers, body: JSON.stringify({ query: QUERY }) });
+    const body = await response.json();
+    if (!body.data) throw new Error(JSON.stringify(body.errors || body));
+    const d = body.data;
+    const g = d.GlobalStat[0] || {};
+    const cards = [
+      ["Gifts created", g.giftsCreated ?? 0], ["Gifts funded", g.giftsFunded ?? 0], ["Gifts claimed", g.giftsClaimed ?? 0],
+      ["Days earned", g.daysEarned ?? 0], ["Days returned", g.daysReturned ?? 0], ["Milestones reached", g.milestonesReached ?? 0],
+      ["AUSD earned", ausd(g.amountEarned)], ["AUSD returned", ausd(g.amountReturned)], ["AUSD withdrawn", ausd(g.amountWithdrawn)],
+      ["AUSD refunded", ausd(g.amountRefunded)], ["Exits", g.exits ?? 0], ["AUSD exited", ausd(g.exitAmountIn)], ["Events indexed", g.eventsIndexed ?? 0],
+    ];
+    document.getElementById("global").replaceChildren(...cards.map(([k, v]) => { const c = document.createElement("div"); c.className = "card"; c.innerHTML = `<div class="k"></div><div class="v"></div>`; c.firstChild.textContent = k; c.lastChild.textContent = v; return c; }));
+    fill("days", d.DayStat.map((s) => row([[s.id], [s.giftsCreated, 1], [s.daysEarned, 1], [s.daysReturned, 1], [s.milestonesReached, 1], [ausd(s.amountEarned), 1], [ausd(s.amountReturned), 1], [ausd(s.amountWithdrawn), 1], [ausd(s.amountRefunded), 1], [s.exits, 1]])));
+    fill("conditions", d.ConditionStat.map((s) => row([[short(s.contract)], [s.goalType, 1], [s.kind], [s.giftsCreated, 1], [s.giftsClaimed, 1], [s.daysEarned, 1], [s.daysReturned, 1], [s.milestonesReached, 1], [ausd(s.amountEarned), 1], [ausd(s.amountReturned), 1], [ausd(s.amountRefunded), 1]])));
+    fill("payouts", d.PayoutStat.map((s) => row([[s.tokenOut === "0x0000000000000000000000000000000000000000" ? "MON (the chain's coin)" : short(s.tokenOut)], [short(s.exchange)], [s.exits, 1], [ausd(s.amountIn), 1], [String(s.amountOut), 1]])));
+    fill("gifts", d.Gift.map((s) => row([[`${short(s.contract)} #${s.giftId}`], [s.kind], [s.goalType, 1], [s.status], [ausd(s.amount), 1], [s.daysEarned, 1], [s.daysReturned, 1], [ausd(s.amountEarned), 1], [ausd(s.amountRefunded), 1], [String(s.createdAt).slice(0, 16).replace("T", " ")]])));
+    status.textContent = `read ${new Date().toISOString().slice(0, 19)}Z`;
+  }
+
+  document.getElementById("endpointForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const endpoint = input.value.trim();
+    try { localStorage.setItem("viky-index-endpoint", endpoint); } catch (_) {}
+    try { await read(endpoint); } catch (error) { status.textContent = `could not read: ${error.message}`; status.className = "error"; }
+  });
+  if (params.get("endpoint") || remembered) document.getElementById("endpointForm").requestSubmit();
+</script>
+</body>
+</html>

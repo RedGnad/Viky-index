@@ -1,0 +1,76 @@
+# Viky-index: Viky's four contracts on Monad mainnet (chain 143), indexed with Envio HyperIndex.
+# Addresses and deployment blocks are read from the chain and from Viky's operations notes (23 Sep 2026):
+#   GiftEscrow, the daily contract      0x995Ab09d8B20511d057E9E87D00fa1f41fC0e233, deployed at block 103,970,877 (11 Sep 2026)
+#   GiftEscrow, the earlier contract     0xE04CD59bB93765333200a9da01df83149D4C4d67, still running gift 1 (see README for its first block)
+#   MilestoneGift                        0x8dc281Ac8a1c789fdb65a063b9225E98eC522F0e, deployed at block 105,654,716 (17 Sep 2026)
+#   ExitRouter                           0x8a1790DfD10CF1599bDaeD5eC8BB46B2A6eB6223, deployed at block 105,185,369 (16 Sep 2026)
+# This variant reads the chain through the public RPC https://rpc.monad.xyz, which limits eth_getLogs to 100 blocks per
+# call (measured 23 Sep 2026), so the batch is pinned at 100; slow, but it needs no token. config.yaml is the HyperSync one.
+name: viky-index-rpc
+description: Viky's gifts, days, payouts and refunds on Monad, from the contracts' own events
+address_format: lowercase
+rollback_on_reorg: true
+field_selection:
+  transaction_fields:
+    - hash
+
+contracts:
+  - name: GiftEscrow
+    abi_file_path: abis/GiftEscrow.json
+    handler: src/EventHandlers.ts
+    events:
+      - event: "GoalRegistered(uint8 indexed goalType, bytes32 indexed providerId)"
+      - event: "GiftCreated(uint256 indexed giftId, address indexed funder, address refundTo, bytes32 indexed recipientContactHash, uint8 goalType, uint32 dailyTarget, uint32 durationDays, uint256 amount, uint256 perDay)"
+      - event: "GiftFunded(uint256 indexed giftId, uint256 amount)"
+      - event: "GiftClaimed(uint256 indexed giftId, address indexed recipient)"
+      - event: "IdentityBound(uint256 indexed giftId, address indexed recipient, bytes32 indexed identityHash)"
+      - event: "CheckInAccepted(uint256 indexed giftId, address indexed recipient, uint32 fromDay, uint32 toDay, uint32 creditedDays, uint64 metricValue, uint64 observedAt)"
+      - event: "DaysDrained(uint256 indexed giftId, uint32 fromDay, uint32 toDay, uint32 missedDays, uint256 amount)"
+      - event: "EarnedWithdrawn(uint256 indexed giftId, address indexed recipient, address indexed to, uint256 amount)"
+      - event: "UnearnedRefunded(uint256 indexed giftId, address indexed refundTo, uint256 amount)"
+      - event: "GiftCancelled(uint256 indexed giftId, uint256 refunded)"
+      - event: "GiftFinalised(uint256 indexed giftId, uint32 creditedDays, uint32 drainedDays, uint256 dust)"
+  - name: MilestoneGift
+    abi_file_path: abis/MilestoneGift.json
+    handler: src/EventHandlers.ts
+    events:
+      - event: "GoalRegistered(uint8 indexed goalType, bytes32 indexed providerId, uint8 shape)"
+      - event: "GiftCreated(uint256 indexed giftId, address indexed funder, address refundTo, bytes32 indexed recipientContactHash, uint8 goalType, uint8 shape, uint64 target, uint64 maximumStart, bytes32 subject, uint32 durationDays, uint256 amount, uint64 deadline)"
+      - event: "GiftFunded(uint256 indexed giftId, uint256 amount)"
+      - event: "GiftClaimed(uint256 indexed giftId, address indexed recipient)"
+      - event: "StartRecorded(uint256 indexed giftId, address indexed recipient, bytes32 indexed identityHash, uint64 startingValue, uint64 deadline)"
+      - event: "MilestoneReached(uint256 indexed giftId, address indexed recipient, uint64 metricValue, uint64 observedAt, uint256 amount)"
+      - event: "GiftExpired(uint256 indexed giftId, uint256 amount)"
+      - event: "EarnedWithdrawn(uint256 indexed giftId, address indexed recipient, address indexed to, uint256 amount)"
+      - event: "UnearnedRefunded(uint256 indexed giftId, address indexed refundTo, uint256 amount)"
+      - event: "GiftCancelled(uint256 indexed giftId, uint256 refunded)"
+  - name: ExitRouter
+    abi_file_path: abis/ExitRouter.json
+    handler: src/EventHandlers.ts
+    events:
+      - event: "ExchangeAllowed(address indexed exchange, bool allowed, address mustPointAt)"
+      - event: "Exited(address indexed payer, uint256 amountIn, address indexed tokenOut, uint256 amountOut, address indexed exchange)"
+
+chains:
+  - id: 143
+    start_block: 103970877
+    rpc:
+      - url: https://rpc.monad.xyz
+        for: sync
+        initial_block_interval: 100
+        backoff_multiplicative: 0.8
+        acceleration_additive: 0
+        interval_ceiling: 100
+        backoff_millis: 2000
+        query_timeout_millis: 20000
+    contracts:
+      - name: GiftEscrow
+        address:
+          - "0x995Ab09d8B20511d057E9E87D00fa1f41fC0e233"
+          - "0xE04CD59bB93765333200a9da01df83149D4C4d67"
+      - name: MilestoneGift
+        address: "0x8dc281Ac8a1c789fdb65a063b9225E98eC522F0e"
+        start_block: 105654716
+      - name: ExitRouter
+        address: "0x8a1790DfD10CF1599bDaeD5eC8BB46B2A6eB6223"
+        start_block: 105185369

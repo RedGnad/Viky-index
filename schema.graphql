@@ -1,0 +1,216 @@
+# Viky-index: what Viky's contracts say on Monad, gift by gift, day by day.
+#
+# Money is AUSD with 6 decimals on the gift contracts (amounts are kept as the contracts emit them, BigInt in base
+# units). "Earned" is what a recipient's check-ins or milestone credited; "returned" is what missed days, expiry,
+# refunds and cancellations gave back to the funder's side. A payout is an EarnedWithdrawn (AUSD to the recipient's
+# chosen address) or an Exited on the router (AUSD in, another coin out through one allowed exchange: the rail).
+
+enum GiftKind {
+  daily
+  milestone
+}
+
+enum GiftStatus {
+  created
+  funded
+  claimed
+  cancelled
+  finalised
+  expired
+}
+
+type Gift {
+  id: ID! # "<contract>-<giftId>"
+  contract: String! @index
+  giftId: BigInt! @index
+  kind: GiftKind! @index
+  funder: String! @index
+  refundTo: String!
+  recipientContactHash: String!
+  goalType: Int! @index
+  # daily gifts
+  dailyTarget: Int
+  perDay: BigInt
+  # milestone gifts
+  shape: Int
+  target: BigInt
+  maximumStart: BigInt
+  subject: String
+  deadline: BigInt
+  durationDays: Int!
+  amount: BigInt!
+  status: GiftStatus! @index
+  recipient: String
+  identityHash: String
+  createdAt: Timestamp!
+  createdAtBlock: BigInt!
+  createdInTransaction: String!
+  fundedAmount: BigInt!
+  daysEarned: Int!
+  daysReturned: Int!
+  amountEarned: BigInt!
+  amountReturned: BigInt!
+  amountWithdrawn: BigInt!
+  amountRefunded: BigInt!
+  checkIns: [CheckIn!]! @derivedFrom(field: "gift")
+  drains: [Drain!]! @derivedFrom(field: "gift")
+  withdrawals: [Withdrawal!]! @derivedFrom(field: "gift")
+  refunds: [Refund!]! @derivedFrom(field: "gift")
+}
+
+type CheckIn {
+  id: ID! # "<chainId>-<block>-<logIndex>"
+  gift: Gift!
+  recipient: String!
+  fromDay: Int!
+  toDay: Int!
+  creditedDays: Int!
+  amountEarned: BigInt!
+  metricValue: BigInt!
+  observedAt: BigInt!
+  at: Timestamp!
+  block: BigInt!
+  transaction: String!
+}
+
+type Milestone {
+  id: ID!
+  gift: Gift!
+  recipient: String!
+  metricValue: BigInt!
+  observedAt: BigInt!
+  amount: BigInt!
+  at: Timestamp!
+  block: BigInt!
+  transaction: String!
+}
+
+type Drain {
+  id: ID!
+  gift: Gift!
+  fromDay: Int!
+  toDay: Int!
+  missedDays: Int!
+  amount: BigInt!
+  at: Timestamp!
+  block: BigInt!
+  transaction: String!
+}
+
+type Withdrawal {
+  id: ID!
+  gift: Gift!
+  recipient: String!
+  to: String!
+  amount: BigInt!
+  at: Timestamp!
+  block: BigInt!
+  transaction: String!
+}
+
+enum RefundReason {
+  unearned
+  cancelled
+  expired
+}
+
+type Refund {
+  id: ID!
+  gift: Gift!
+  reason: RefundReason!
+  refundTo: String!
+  amount: BigInt!
+  at: Timestamp!
+  block: BigInt!
+  transaction: String!
+}
+
+type Exit {
+  id: ID!
+  payer: String! @index
+  amountIn: BigInt!
+  tokenOut: String! @index
+  amountOut: BigInt!
+  exchange: String! @index
+  at: Timestamp!
+  block: BigInt!
+  transaction: String!
+}
+
+type Goal {
+  id: ID! # "<contract>-<goalType>"
+  contract: String!
+  goalType: Int!
+  providerId: String!
+  shape: Int
+  registeredAt: Timestamp!
+}
+
+type Exchange {
+  id: ID! # exchange address
+  allowed: Boolean!
+  mustPointAt: String!
+  updatedAt: Timestamp!
+}
+
+# One row per UTC day: what happened that day, across all gifts.
+type DayStat {
+  id: ID! # "YYYY-MM-DD"
+  giftsCreated: Int!
+  giftsFunded: Int!
+  giftsClaimed: Int!
+  daysEarned: Int!
+  daysReturned: Int!
+  milestonesReached: Int!
+  amountEarned: BigInt!
+  amountReturned: BigInt!
+  amountWithdrawn: BigInt!
+  amountRefunded: BigInt!
+  exits: Int!
+  exitAmountIn: BigInt!
+}
+
+# One row per condition (a goal type on a contract): the same measures.
+type ConditionStat {
+  id: ID! # "<contract>-<goalType>"
+  contract: String!
+  goalType: Int!
+  kind: GiftKind!
+  giftsCreated: Int!
+  giftsFunded: Int!
+  giftsClaimed: Int!
+  daysEarned: Int!
+  daysReturned: Int!
+  milestonesReached: Int!
+  amountEarned: BigInt!
+  amountReturned: BigInt!
+  amountWithdrawn: BigInt!
+  amountRefunded: BigInt!
+}
+
+# One row per (coin out, exchange): payouts by currency and rail.
+type PayoutStat {
+  id: ID! # "<tokenOut>-<exchange>"
+  tokenOut: String!
+  exchange: String!
+  exits: Int!
+  amountIn: BigInt!
+  amountOut: BigInt!
+}
+
+type GlobalStat {
+  id: ID! # "global"
+  giftsCreated: Int!
+  giftsFunded: Int!
+  giftsClaimed: Int!
+  daysEarned: Int!
+  daysReturned: Int!
+  milestonesReached: Int!
+  amountEarned: BigInt!
+  amountReturned: BigInt!
+  amountWithdrawn: BigInt!
+  amountRefunded: BigInt!
+  exits: Int!
+  exitAmountIn: BigInt!
+  eventsIndexed: Int!
+}
