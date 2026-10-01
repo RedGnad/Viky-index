@@ -44,6 +44,41 @@ contracts:
       - event: "EarnedWithdrawn(uint256 indexed giftId, address indexed recipient, address indexed to, uint256 amount)"
       - event: "UnearnedRefunded(uint256 indexed giftId, address indexed refundTo, uint256 amount)"
       - event: "GiftCancelled(uint256 indexed giftId, uint256 refunded)"
+  # The second version of the two gift contracts (the audit of 1 Oct 2026): a gift is opened with the key its link
+  # carries (openingKey in GiftCreated, where the first version had a contact hash), and the person it is for can end
+  # it (GiftEnded). Their addresses are added under `chains` once they are deployed: until then nothing is indexed for
+  # them, and everything above runs as before.
+  - name: GiftEscrowV2
+    abi_file_path: abis/GiftEscrowV2.json
+    handler: src/EventHandlers.ts
+    events:
+      - event: "GoalRegistered(uint8 indexed goalType, bytes32 indexed providerId)"
+      - event: "GiftCreated(uint256 indexed giftId, address indexed funder, address refundTo, address indexed openingKey, uint8 goalType, uint32 dailyTarget, uint32 durationDays, uint256 amount, uint256 perDay)"
+      - event: "GiftFunded(uint256 indexed giftId, uint256 amount)"
+      - event: "GiftClaimed(uint256 indexed giftId, address indexed recipient)"
+      - event: "IdentityBound(uint256 indexed giftId, address indexed recipient, bytes32 indexed identityHash)"
+      - event: "CheckInAccepted(uint256 indexed giftId, address indexed recipient, uint32 fromDay, uint32 toDay, uint32 creditedDays, uint64 metricValue, uint64 observedAt)"
+      - event: "DaysDrained(uint256 indexed giftId, uint32 fromDay, uint32 toDay, uint32 missedDays, uint256 amount)"
+      - event: "EarnedWithdrawn(uint256 indexed giftId, address indexed recipient, address indexed to, uint256 amount)"
+      - event: "UnearnedRefunded(uint256 indexed giftId, address indexed refundTo, uint256 amount)"
+      - event: "GiftCancelled(uint256 indexed giftId, uint256 refunded)"
+      - event: "GiftEnded(uint256 indexed giftId, address indexed recipient, uint256 kept, uint256 givenBack, uint32 givenBackDays)"
+      - event: "GiftFinalised(uint256 indexed giftId, uint32 creditedDays, uint32 drainedDays, uint256 dust)"
+  - name: MilestoneGiftV2
+    abi_file_path: abis/MilestoneGiftV2.json
+    handler: src/EventHandlers.ts
+    events:
+      - event: "GoalRegistered(uint8 indexed goalType, bytes32 indexed providerId, uint8 shape)"
+      - event: "GiftCreated(uint256 indexed giftId, address indexed funder, address refundTo, address indexed openingKey, uint8 goalType, uint8 shape, uint64 target, uint64 maximumStart, bytes32 subject, uint32 durationDays, uint256 amount, uint64 deadline)"
+      - event: "GiftFunded(uint256 indexed giftId, uint256 amount)"
+      - event: "GiftClaimed(uint256 indexed giftId, address indexed recipient)"
+      - event: "StartRecorded(uint256 indexed giftId, address indexed recipient, bytes32 indexed identityHash, uint64 startingValue, uint64 deadline)"
+      - event: "MilestoneReached(uint256 indexed giftId, address indexed recipient, uint64 metricValue, uint64 observedAt, uint256 amount)"
+      - event: "GiftExpired(uint256 indexed giftId, uint256 amount)"
+      - event: "GiftEnded(uint256 indexed giftId, address indexed recipient, uint256 kept, uint256 givenBack)"
+      - event: "EarnedWithdrawn(uint256 indexed giftId, address indexed recipient, address indexed to, uint256 amount)"
+      - event: "UnearnedRefunded(uint256 indexed giftId, address indexed refundTo, uint256 amount)"
+      - event: "GiftCancelled(uint256 indexed giftId, uint256 refunded)"
   - name: ExitRouter
     abi_file_path: abis/ExitRouter.json
     handler: src/EventHandlers.ts
@@ -65,3 +100,8 @@ chains:
       - name: ExitRouter
         address: "0x8a1790DfD10CF1599bDaeD5eC8BB46B2A6eB6223"
         start_block: 105185369
+      # The second version, not deployed yet: with no address nothing is indexed for these two. At deployment, give
+      # each one its `address` and its `start_block` (`pnpm deploy:v2` in the Viky repository prints the addresses;
+      # the block is the deployment's own).
+      - name: GiftEscrowV2
+      - name: MilestoneGiftV2

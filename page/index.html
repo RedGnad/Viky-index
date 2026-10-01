@@ -61,9 +61,9 @@
   const params = new URLSearchParams(location.search);
   const input = document.getElementById("endpoint");
   const status = document.getElementById("status");
-  let remembered = "";
-  try { remembered = localStorage.getItem("viky-index-endpoint") || ""; } catch (_) {}
-  input.value = params.get("endpoint") || remembered || "https://indexer.dev.hyperindex.xyz/8213f52/v1/graphql";
+  // The endpoint named in the page's own link, or the hosted one. An endpoint typed on an earlier visit is no longer
+  // kept: it outlived the deployment it named, and the page then asked an endpoint that had stopped answering.
+  input.value = params.get("endpoint") || "https://indexer.dev.hyperindex.xyz/8213f52/v1/graphql";
 
   const ausd = (v) => (Number(BigInt(v || 0)) / 1e6).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 6 });
   const short = (a) => a ? a.slice(0, 6) + "…" + a.slice(-4) : "";
@@ -104,7 +104,6 @@
   document.getElementById("endpointForm").addEventListener("submit", async (e) => {
     e.preventDefault();
     const endpoint = input.value.trim();
-    try { localStorage.setItem("viky-index-endpoint", endpoint); } catch (_) {}
     try { await read(endpoint); } catch (error) { status.textContent = `could not read: ${error.message}`; status.className = "error"; }
   });
   document.getElementById("endpointForm").requestSubmit();

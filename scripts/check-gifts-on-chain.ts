@@ -21,11 +21,14 @@ function argument(name: string, fallback?: string): string | undefined {
 type GiftRow = {
   id: string;
   kind: "daily" | "milestone";
+  /** 1 or 2: which version of its contract holds the gift, and so which ABI reads its storage. */
+  version: number;
   status: string;
   amount: string;
   fundedAmount: string;
   daysEarned: number;
   daysReturned: number;
+  daysGivenBack: number;
   amountEarned: string;
   amountReturned: string;
   amountWithdrawn: string;
@@ -42,7 +45,7 @@ async function giftsFromIndex(): Promise<GiftRow[]> {
         // the local Hasura wants its admin secret; the hosted endpoint is public and rejects the header
         ...(process.env.HASURA_ADMIN_SECRET || endpoint.includes("localhost") ? { "x-hasura-admin-secret": process.env.HASURA_ADMIN_SECRET ?? "testing" } : {}),
       },
-      body: JSON.stringify({ query: "{ Gift(order_by: {createdAt: asc}) { id kind status amount fundedAmount daysEarned daysReturned amountEarned amountReturned amountWithdrawn amountRefunded } }" }),
+      body: JSON.stringify({ query: "{ Gift(order_by: {createdAt: asc}) { id kind version status amount fundedAmount daysEarned daysReturned daysGivenBack amountEarned amountReturned amountWithdrawn amountRefunded } }" }),
     });
     return ((await response.json()) as { data: { Gift: GiftRow[] } }).data.Gift;
   }
@@ -54,8 +57,10 @@ async function main(): Promise<void> {
   const request = new FetchRequest(argument("rpc", "https://rpc1.monad.xyz")!);
   request.setHeader("User-Agent", "viky-index/0.1 (+https://github.com/RedGnad/Viky-index)");
   const provider = new JsonRpcProvider(request, 143, { staticNetwork: true });
-  const daily = JSON.parse(readFileSync("abis/GiftEscrow.json", "utf8"));
-  const milestone = JSON.parse(readFileSync("abis/MilestoneGift.json", "utf8"));
+  const abis = {
+    daily: { 1: JSON.parse(readFileSync("abis/GiftEscrow.json", "utf8")), 2: JSON.parse(readFileSync("abis/GiftEscrowV2.json", "utf8")) },
+    milestone: { 1: JSON.parse(readFileSync("abis/MilestoneGift.json", "utf8")), 2: JSON.parse(readFileSync("abis/MilestoneGiftV2.json", "utf8")) },
+  };
 
   const gifts = await giftsFromIndex();
   let differing = 0;
@@ -67,7 +72,9 @@ async function main(): Promise<void> {
 
   for (const gift of gifts) {
     const [contract, giftId] = gift.id.split("-");
-    const abi = gift.kind === "daily" ? daily : milestone;
+    // A record made before the index kept the version is a gift of the first.
+    const version = gift.version === 2 ? 2 : 1;
+    const abi = abis[gift.kind][version];
     const stored = await new Contract(contract, abi, provider).getGift(BigInt(giftId));
     console.log(`${gift.kind} gift ${giftId} on ${contract} (index status: ${gift.status})`);
     line("amount", stored.amount, gift.amount);
@@ -78,10 +85,16 @@ async function main(): Promise<void> {
       line("drained days", stored.drainedDays, gift.daysReturned);
       line("earned (credited x perDay)", BigInt(stored.creditedDays) * BigInt(stored.perDay), gift.amountEarned);
       line("cancelled", stored.cancelled, gift.status === "cancelled");
-      line("finalised", stored.finalised, gift.status === "finalised");
+      // An ending finalises the gift in the contract's storage, and the index says which of the two it was.
+      line("finalised", stored.finalised, gift.status === "finalised" || gift.status === "ended");
+      if (version === 2) {
+        line("given back days", stored.givenBackDays, gift.daysGivenBack);
+        line("ended", stored.endedAt > 0n, gift.status === "ended");
+      }
     } else {
       line("earned", stored.earned, gift.amountEarned);
       line("cancelled", stored.cancelled, gift.status === "cancelled");
+      if (version === 2) line("ended", stored.endedAt > 0n, gift.status === "ended");
     }
     console.log(`    refundable still held: ${stored.refundable} (not an event sum; shown for the reader)`);
   }

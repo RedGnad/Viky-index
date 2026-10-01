@@ -23,12 +23,25 @@ Four contracts on Monad mainnet (chain 143), addresses and deployment blocks rea
 The ABIs in `abis/` are the compiled interfaces of Viky's contract sources (Solidity 0.8.30). The events indexed are
 listed in `config.yaml`; the ones about ownership, pauses and the evidence signer are not, since they move no money.
 
+### The second version of the gift contracts (not deployed yet)
+
+`GiftEscrowV2` and `MilestoneGiftV2` are declared in `config.yaml` with their events and no address, so nothing is
+indexed for them: this branch runs exactly as before on the four contracts above. At their deployment, give each of
+the two its `address` and its `start_block` under `chains` (in `config.yaml` and `config.rpc.yaml`), then push the
+`envio` branch once. They emit the same events as the first version for everything the two share, and the same
+handlers serve both. What differs: a gift is created with `openingKey` (the address of the key its link carries)
+where the first version had a contact hash, and the person a gift is for can end it (`GiftEnded`, the `Ending`
+entity, the gift's status `ended`, `daysGivenBack`, `giftsEnded` in the three aggregates).
+
 ## The words
 
 - **earned**: a recipient's credited days times the gift's per-day amount (daily), or a milestone's amount.
-- **returned**: what left the recipient's side for the funder's: drained days (daily), an expiry (milestone).
+- **returned**: what left the recipient's side for the funder's: drained days (daily), an expiry (milestone), the
+  days given back or the whole amount when the person a gift is for ends it (second version).
 - **withdrawn**: what a recipient took out (`EarnedWithdrawn`), to the address they chose.
-- **refunded**: what went back to the funder's address (`UnearnedRefunded`, `GiftCancelled`).
+- **refunded**: what went back to the funder's address: `UnearnedRefunded`, and nothing else. A cancellation, an
+  expiry and an ending say what a gift became; the money they send back is an `UnearnedRefunded` of its own. Until
+  1 Oct 2026 a cancellation's amount was added on both events, so a cancelled gift's refund counted twice.
 - **payout by currency and rail**: an `Exited` on the router: AUSD in, `tokenOut` out, through one allowed `exchange`.
 
 Amounts are kept in base units as the contracts emit them (AUSD has 6 decimals). Nothing here is estimated: every
@@ -36,7 +49,7 @@ figure is a sum of what events carried.
 
 ## Entities (`schema.graphql`)
 
-`Gift`, `CheckIn`, `Milestone`, `Drain`, `Withdrawal`, `Refund`, `Exit`, `Goal`, `Exchange`, and the aggregates
+`Gift`, `CheckIn`, `Milestone`, `Drain`, `Ending`, `Withdrawal`, `Refund`, `Exit`, `Goal`, `Exchange`, and the aggregates
 `DayStat` (id `YYYY-MM-DD`), `ConditionStat` (id `<contract>-<goalType>`), `PayoutStat` (id `<tokenOut>-<exchange>`),
 `GlobalStat` (id `global`).
 
