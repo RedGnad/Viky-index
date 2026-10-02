@@ -1,0 +1,16 @@
+hosted endpoint: https://indexer.dev.hyperindex.xyz/8213f52/v1/graphql (deployment 796f011, read 2026-09-23T05:50:30Z)
+chain: artifacts/counts-on-chain-rpc1.json (blocks 103000000 to 107231758, read 2026-09-23T04:58:11Z); indexer: https://indexer.dev.hyperindex.xyz/8213f52/v1/graphql
+what                                           chain   indexer  verdict
+gifts created (daily)                              3         3  same
+gifts created (milestone)                          3         3  same
+check-ins accepted                                 5         5  same
+days drained                                      17        17  same
+milestones reached                                 0         0  same
+withdrawals                                        1         1  same
+refunds (unearned, cancelled, expired)            16        16  same
+exits                                              1         1  same
+goal registrations (events)                       19        19  same
+goals (distinct contract and goal type)            -        18  (not counted on chain)
+exchanges allowed or revoked (distinct)            -         1  (not counted on chain)
+events indexed (all configured kinds)             84        84  same
+exit=0

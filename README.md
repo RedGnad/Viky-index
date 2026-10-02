@@ -11,7 +11,8 @@ No secret lives here. The only credential the indexer may use, an Envio API toke
 
 ## What is indexed
 
-Four contracts on Monad mainnet (chain 143), addresses and deployment blocks read from the chain on 23 Sep 2026:
+Seven contracts on Monad mainnet (chain 143). The first four, addresses and deployment blocks read from the chain on
+23 Sep 2026:
 
 | Contract | Address | From block |
 |---|---|---|
@@ -23,12 +24,36 @@ Four contracts on Monad mainnet (chain 143), addresses and deployment blocks rea
 The ABIs in `abis/` are the compiled interfaces of Viky's contract sources (Solidity 0.8.30). The events indexed are
 listed in `config.yaml`; the ones about ownership, pauses and the evidence signer are not, since they move no money.
 
+### The second version of the gift contracts, and the anchor of agreements
+
+Deployed on 2 Oct 2026 from the Viky repository at commit `c837bb6`, each block read from its deployment's receipt:
+
+| Contract | Address | From block |
+|---|---|---|
+| `GiftEscrowV2` | `0xC83d8028347967Fc84D0e36Ae5876d9b29EAEc51` | 109,877,558 |
+| `MilestoneGiftV2` | `0x493c87A27E637bBc7179C17bE2B215fC18523CC0` | 109,877,586 |
+| `ConsentAnchor` | `0x2a15DF23fF62120700f14D1E5d5d56CA0dAd027e` | 109,877,728 |
+
+The two gift contracts emit the same events as the first version for everything the two share, and the same handlers
+serve both. What differs: a gift is created with `openingKey` (the address of the key its link carries) where the
+first version had a contact hash, and the person a gift is for can end it (`GiftEnded`, the `Ending` entity, the
+gift's status `ended`, `daysGivenBack`, `giftsEnded` in the three aggregates).
+
+The anchor moves no money. It is where the agreement of the person a gift is for is written down in public: a consent
+key bound once to an account by the account's own signature (`ConsentKeyBound`, the `ConsentKey` entity), then every
+yes and every stop at the next place of the gift's sequence (`ConsentAnchored`, the `ConsentEntry` entity, with the
+digest of the text agreed to and the two halves of the key's signature). `GlobalStat` counts the three:
+`consentKeysBound`, `yesAnchored`, `stopsAnchored`.
+
 ## The words
 
 - **earned**: a recipient's credited days times the gift's per-day amount (daily), or a milestone's amount.
-- **returned**: what left the recipient's side for the funder's: drained days (daily), an expiry (milestone).
+- **returned**: what left the recipient's side for the funder's: drained days (daily), an expiry (milestone), the
+  days given back or the whole amount when the person a gift is for ends it (second version).
 - **withdrawn**: what a recipient took out (`EarnedWithdrawn`), to the address they chose.
-- **refunded**: what went back to the funder's address (`UnearnedRefunded`, `GiftCancelled`).
+- **refunded**: what went back to the funder's address: `UnearnedRefunded`, and nothing else. A cancellation, an
+  expiry and an ending say what a gift became; the money they send back is an `UnearnedRefunded` of its own. Until
+  1 Oct 2026 a cancellation's amount was added on both events, so a cancelled gift's refund counted twice.
 - **payout by currency and rail**: an `Exited` on the router: AUSD in, `tokenOut` out, through one allowed `exchange`.
 
 Amounts are kept in base units as the contracts emit them (AUSD has 6 decimals). Nothing here is estimated: every
@@ -36,7 +61,7 @@ figure is a sum of what events carried.
 
 ## Entities (`schema.graphql`)
 
-`Gift`, `CheckIn`, `Milestone`, `Drain`, `Withdrawal`, `Refund`, `Exit`, `Goal`, `Exchange`, and the aggregates
+`Gift`, `CheckIn`, `Milestone`, `Drain`, `Ending`, `Withdrawal`, `Refund`, `Exit`, `Goal`, `Exchange`, and the aggregates
 `DayStat` (id `YYYY-MM-DD`), `ConditionStat` (id `<contract>-<goalType>`), `PayoutStat` (id `<tokenOut>-<exchange>`),
 `GlobalStat` (id `global`).
 
@@ -73,5 +98,16 @@ endpoint is a parameter in the URL (`?endpoint=`), so the same page reads a loca
 
 ## Deployment
 
-Envio's hosted service deploys from this repository (GitHub app, branch `main`, config `config.yaml`), or from the
-command line with `envio-cloud`. The endpoint, once deployed, is written here with the date it was read.
+Envio's hosted service deploys this repository from the branch `envio` (config `config.yaml`, root `./`, Development
+plan; every push to that branch makes a new deployment with a new endpoint id, so `main` moves ahead for anything
+that is not the indexer). Deployment `796f011` of 23 Sep 2026, 07:44 CEST, HyperSync, synced to the head in one
+minute, endpoint public:
+
+```
+https://indexer.dev.hyperindex.xyz/8213f52/v1/graphql
+```
+
+Read at 05:49 UTC the same day: `_meta` at the head (progress block equal to the source block), 84 events processed;
+`scripts/compare-counts.ts` against `artifacts/counts-on-chain-rpc1.json`: every line the same;
+`scripts/check-gifts-on-chain.ts`: every gift equal to its contract's storage (`artifacts/hosted-2026-09-23/`).
+The page reads that endpoint by default: https://redgnad.github.io/Viky-index/page/ (GitHub Pages from `main`).

@@ -17,6 +17,7 @@
   "include": [
     "src/**/*.ts",
     "envio-env.d.ts",
-    "scripts/**/*.ts"
+    "scripts/**/*.ts",
+    "test/**/*.ts"
   ]
 }

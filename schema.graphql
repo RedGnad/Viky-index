@@ -2,7 +2,7 @@
 #
 # Money is AUSD with 6 decimals on the gift contracts (amounts are kept as the contracts emit them, BigInt in base
 # units). "Earned" is what a recipient's check-ins or milestone credited; "returned" is what missed days, expiry,
-# refunds and cancellations gave back to the funder's side. A payout is an EarnedWithdrawn (AUSD to the recipient's
+# refunds, cancellations and endings gave back to the funder's side. A payout is an EarnedWithdrawn (AUSD to the recipient's
 # chosen address) or an Exited on the router (AUSD in, another coin out through one allowed exchange: the rail).
 
 enum GiftKind {
@@ -17,6 +17,10 @@ enum GiftStatus {
   cancelled
   finalised
   expired
+  # a milestone gift whose target was read: the whole amount is the recipient's
+  reached
+  # ended by the person it is for (second version of the contracts): what was counted stays theirs, the rest went back
+  ended
 }
 
 type Gift {
@@ -24,9 +28,13 @@ type Gift {
   contract: String! @index
   giftId: BigInt! @index
   kind: GiftKind! @index
+  # 1 or 2: which version of its contract holds it
+  version: Int! @index
   funder: String! @index
   refundTo: String!
-  recipientContactHash: String!
+  # first version: a hash that named nobody. Second version: the address of the key the gift's link carries.
+  recipientContactHash: String
+  openingKey: String
   goalType: Int! @index
   # daily gifts
   dailyTarget: Int
@@ -48,10 +56,13 @@ type Gift {
   fundedAmount: BigInt!
   daysEarned: Int!
   daysReturned: Int!
+  # the days given back when its recipient ended it: neither earned nor missed
+  daysGivenBack: Int!
   amountEarned: BigInt!
   amountReturned: BigInt!
   amountWithdrawn: BigInt!
   amountRefunded: BigInt!
+  endings: [Ending!]! @derivedFrom(field: "gift")
   checkIns: [CheckIn!]! @derivedFrom(field: "gift")
   drains: [Drain!]! @derivedFrom(field: "gift")
   withdrawals: [Withdrawal!]! @derivedFrom(field: "gift")
@@ -80,6 +91,20 @@ type Milestone {
   metricValue: BigInt!
   observedAt: BigInt!
   amount: BigInt!
+  at: Timestamp!
+  block: BigInt!
+  transaction: String!
+}
+
+# The person a gift is for ended it (second version of the contracts). `kept` is what stays theirs, `givenBack` what
+# went back to the funder's side in that transaction (its transfer is the UnearnedRefunded beside it).
+type Ending {
+  id: ID!
+  gift: Gift!
+  recipient: String!
+  kept: BigInt!
+  givenBack: BigInt!
+  givenBackDays: Int
   at: Timestamp!
   block: BigInt!
   transaction: String!
@@ -172,6 +197,7 @@ type DayStat {
   giftsCreated: Int!
   giftsFunded: Int!
   giftsClaimed: Int!
+  giftsEnded: Int!
   daysEarned: Int!
   daysReturned: Int!
   milestonesReached: Int!
@@ -192,6 +218,7 @@ type ConditionStat {
   giftsCreated: Int!
   giftsFunded: Int!
   giftsClaimed: Int!
+  giftsEnded: Int!
   daysEarned: Int!
   daysReturned: Int!
   milestonesReached: Int!
@@ -211,11 +238,39 @@ type PayoutStat {
   amountOut: BigInt!
 }
 
+# The key an account signs its agreements with, bound once on the anchor by the account's own signature.
+type ConsentKey {
+  id: ID! # the account
+  account: String! @index
+  key: String!
+  at: Timestamp!
+  block: BigInt!
+  transaction: String!
+}
+
+# One yes or one stop of an account for a gift, at its place in that gift's sequence (0 is the first). The digest is
+# the hash of the text that was agreed to; the two halves of the signature are the consent key's own over it.
+type ConsentEntry {
+  id: ID!
+  account: String! @index
+  giftId: BigInt! @index
+  # "yes" or "stop"
+  kind: String! @index
+  sequence: Int!
+  digest: String!
+  signatureR: String!
+  signatureS: String!
+  at: Timestamp!
+  block: BigInt!
+  transaction: String!
+}
+
 type GlobalStat {
   id: ID! # "global"
   giftsCreated: Int!
   giftsFunded: Int!
   giftsClaimed: Int!
+  giftsEnded: Int!
   daysEarned: Int!
   daysReturned: Int!
   milestonesReached: Int!
@@ -225,5 +280,9 @@ type GlobalStat {
   amountRefunded: BigInt!
   exits: Int!
   exitAmountIn: BigInt!
+  # the anchor of agreements: keys bound, and every yes and every stop written down
+  consentKeysBound: Int!
+  yesAnchored: Int!
+  stopsAnchored: Int!
   eventsIndexed: Int!
 }
