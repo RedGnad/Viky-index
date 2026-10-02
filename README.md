@@ -116,11 +116,16 @@ contract's storage. No gift had been made on the second version yet, and nothing
 The first deployment, `796f011` of 23 Sep 2026 (`https://indexer.dev.hyperindex.xyz/8213f52/v1/graphql`, measured in
 `docs/measured-2026-09-23.md`), indexes the first four contracts only.
 
-**How long it stays.** On the Development plan a deployment lives thirty days at most, then runs seven more, is
-read-only for three, and is deleted (Envio's pricing page, read on 2 Oct 2026). So `796f011` goes from 23 Oct 2026 and
-`47c0fbc` from 1 Nov 2026. To stay hosted past that: push `envio` again before the limit, which makes a new deployment
-with a new endpoint id that every reader must then be given, or move the indexer to a Production plan, whose endpoint
-does not change (from 70 dollars a month, read in the account on 2 Oct 2026).
+**How long it stays.** Envio's Development plan, as its pricing page says it (read on 2 Oct 2026): a deployment older
+than thirty days is deleted, and so is one over 20 GB. That is a hard limit: `796f011` goes on 23 Oct 2026, `47c0fbc`
+on 1 Nov 2026. There are soft limits too, whichever comes first: 100,000 events processed, 5 GB, or no request for
+seven days. Those start a grace period of seven days, then three days read-only, then deletion.
+
+The account shows a deployment's creation date and no end date. To stay hosted past the thirty days: push `envio`
+again before the limit, which makes a new deployment with thirty days of its own and a new endpoint id that every
+reader must then be given; or move the indexer to a Production plan (70, 300 or 800 dollars a month, read in the
+account on 2 Oct 2026). The account also offers to promote a deployment to a "static production endpoint", whose
+address stays the same across deployments: not tried.
 
 The page reads the endpoint in service by default: https://redgnad.github.io/Viky-index/page/ (GitHub Pages from
 `main`).
