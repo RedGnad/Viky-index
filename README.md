@@ -11,7 +11,8 @@ No secret lives here. The only credential the indexer may use, an Envio API toke
 
 ## What is indexed
 
-Four contracts on Monad mainnet (chain 143), addresses and deployment blocks read from the chain on 23 Sep 2026:
+Seven contracts on Monad mainnet (chain 143). The first four, addresses and deployment blocks read from the chain on
+23 Sep 2026:
 
 | Contract | Address | From block |
 |---|---|---|
@@ -23,15 +24,26 @@ Four contracts on Monad mainnet (chain 143), addresses and deployment blocks rea
 The ABIs in `abis/` are the compiled interfaces of Viky's contract sources (Solidity 0.8.30). The events indexed are
 listed in `config.yaml`; the ones about ownership, pauses and the evidence signer are not, since they move no money.
 
-### The second version of the gift contracts (not deployed yet)
+### The second version of the gift contracts, and the anchor of agreements
 
-`GiftEscrowV2` and `MilestoneGiftV2` are declared in `config.yaml` with their events and no address, so nothing is
-indexed for them: this branch runs exactly as before on the four contracts above. At their deployment, give each of
-the two its `address` and its `start_block` under `chains` (in `config.yaml` and `config.rpc.yaml`), then push the
-`envio` branch once. They emit the same events as the first version for everything the two share, and the same
-handlers serve both. What differs: a gift is created with `openingKey` (the address of the key its link carries)
-where the first version had a contact hash, and the person a gift is for can end it (`GiftEnded`, the `Ending`
-entity, the gift's status `ended`, `daysGivenBack`, `giftsEnded` in the three aggregates).
+Deployed on 2 Oct 2026 from the Viky repository at commit `c837bb6`, each block read from its deployment's receipt:
+
+| Contract | Address | From block |
+|---|---|---|
+| `GiftEscrowV2` | `0xC83d8028347967Fc84D0e36Ae5876d9b29EAEc51` | 109,877,558 |
+| `MilestoneGiftV2` | `0x493c87A27E637bBc7179C17bE2B215fC18523CC0` | 109,877,586 |
+| `ConsentAnchor` | `0x2a15DF23fF62120700f14D1E5d5d56CA0dAd027e` | 109,877,728 |
+
+The two gift contracts emit the same events as the first version for everything the two share, and the same handlers
+serve both. What differs: a gift is created with `openingKey` (the address of the key its link carries) where the
+first version had a contact hash, and the person a gift is for can end it (`GiftEnded`, the `Ending` entity, the
+gift's status `ended`, `daysGivenBack`, `giftsEnded` in the three aggregates).
+
+The anchor moves no money. It is where the agreement of the person a gift is for is written down in public: a consent
+key bound once to an account by the account's own signature (`ConsentKeyBound`, the `ConsentKey` entity), then every
+yes and every stop at the next place of the gift's sequence (`ConsentAnchored`, the `ConsentEntry` entity, with the
+digest of the text agreed to and the two halves of the key's signature). `GlobalStat` counts the three:
+`consentKeysBound`, `yesAnchored`, `stopsAnchored`.
 
 ## The words
 

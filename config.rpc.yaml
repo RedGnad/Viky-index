@@ -4,6 +4,9 @@
 #   GiftEscrow, the earlier contract     0xE04CD59bB93765333200a9da01df83149D4C4d67, first event at block 103,644,003 (its deployment; read on 23 Sep 2026)
 #   MilestoneGift                        0x8dc281Ac8a1c789fdb65a063b9225E98eC522F0e, deployed at block 105,654,716 (17 Sep 2026)
 #   ExitRouter                           0x8a1790DfD10CF1599bDaeD5eC8BB46B2A6eB6223, deployed at block 105,185,369 (16 Sep 2026)
+#   GiftEscrowV2                         0xC83d8028347967Fc84D0e36Ae5876d9b29EAEc51, deployed at block 109,877,558 (2 Oct 2026)
+#   MilestoneGiftV2                      0x493c87A27E637bBc7179C17bE2B215fC18523CC0, deployed at block 109,877,586 (2 Oct 2026)
+#   ConsentAnchor                        0x2a15DF23fF62120700f14D1E5d5d56CA0dAd027e, deployed at block 109,877,728 (2 Oct 2026)
 # This variant reads the chain through the public RPC https://rpc1.monad.xyz, which answered a 4.3-million-block eth_getLogs
 # in half a second on 23 Sep 2026 (https://rpc.monad.xyz caps the range at 100 blocks, and Envio's sequential sync over it
 # measured 20 blocks a second). No token needed. config.yaml is the HyperSync one.
@@ -47,8 +50,7 @@ contracts:
       - event: "GiftCancelled(uint256 indexed giftId, uint256 refunded)"
   # The second version of the two gift contracts (the audit of 1 Oct 2026): a gift is opened with the key its link
   # carries (openingKey in GiftCreated, where the first version had a contact hash), and the person it is for can end
-  # it (GiftEnded). Their addresses are added under `chains` once they are deployed: until then nothing is indexed for
-  # them, and everything above runs as before.
+  # it (GiftEnded). Deployed on 2 Oct 2026: their addresses and blocks are under `chains`.
   - name: GiftEscrowV2
     abi_file_path: abis/GiftEscrowV2.json
     handler: src/EventHandlers.ts
@@ -86,6 +88,15 @@ contracts:
     events:
       - event: "ExchangeAllowed(address indexed exchange, bool allowed, address mustPointAt)"
       - event: "Exited(address indexed payer, uint256 amountIn, address indexed tokenOut, uint256 amountOut, address indexed exchange)"
+  # Where the agreement of the person a gift is for is written down in public (the audit of 1 Oct 2026): a consent key
+  # bound once to an account by the account's own signature, then every yes and every stop at the next place of the
+  # gift's sequence. It moves no money: the index shows who agreed to what, and when.
+  - name: ConsentAnchor
+    abi_file_path: abis/ConsentAnchor.json
+    handler: src/EventHandlers.ts
+    events:
+      - event: "ConsentKeyBound(address indexed account, bytes32 indexed key)"
+      - event: "ConsentAnchored(address indexed account, uint256 indexed giftId, uint8 kind, uint64 sequence, bytes32 digest, bytes32 signatureR, bytes32 signatureS)"
 
 chains:
   - id: 143
@@ -118,8 +129,14 @@ chains:
       - name: ExitRouter
         address: "0x8a1790DfD10CF1599bDaeD5eC8BB46B2A6eB6223"
         start_block: 105185369
-      # The second version, not deployed yet: with no address nothing is indexed for these two. At deployment, give
-      # each one its `address` and its `start_block` (`pnpm deploy:v2` in the Viky repository prints the addresses;
-      # the block is the deployment's own).
+      # The second version and the anchor of agreements, deployed on 2 Oct 2026 from the Viky repository at commit
+      # c837bb6 (each block is the deployment's own, read from its receipt).
       - name: GiftEscrowV2
+        address: "0xC83d8028347967Fc84D0e36Ae5876d9b29EAEc51"
+        start_block: 109877558
       - name: MilestoneGiftV2
+        address: "0x493c87A27E637bBc7179C17bE2B215fC18523CC0"
+        start_block: 109877586
+      - name: ConsentAnchor
+        address: "0x2a15DF23fF62120700f14D1E5d5d56CA0dAd027e"
+        start_block: 109877728

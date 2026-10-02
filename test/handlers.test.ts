@@ -1,15 +1,16 @@
 /**
  * The handlers, run over events written here rather than read from the chain (Envio's test indexer), with the
  * configuration as it is committed. What they pin: money that went back to a funder is counted once, on the one event
- * that carries the transfer; a milestone reached says so; and the second version of the gift contracts, which has no
- * address yet, is not indexed at all. Its own handlers are tested in handlers-v2.test.ts, with addresses given.
+ * that carries the transfer; a milestone reached says so; and an event from an address that is not one of Viky's
+ * contracts is not indexed at all. The second version's own handlers are tested in handlers-v2.test.ts.
  */
 import assert from "node:assert/strict";
 import test from "node:test";
 import { createTestIndexer } from "envio";
 
 const DAILY_V1 = "0x995ab09d8b20511d057e9e87d00fa1f41fc0e233";
-const DAILY_V2 = "0x00000000000000000000000000000000000d0002";
+/** An address that is none of the configured contracts: somebody else's copy of the second version, for instance. */
+const NOT_VIKYS = "0x00000000000000000000000000000000000d0002";
 const MILESTONE_V1 = "0x8dc281ac8a1c789fdb65a063b9225e98ec522f0e";
 const FUNDER = "0x00000000000000000000000000000000000000f1";
 const RECIPIENT = "0x00000000000000000000000000000000000000a1";
@@ -66,11 +67,11 @@ test("a milestone reached says so, and an expiry moves no money by itself", asyn
   assert.equal(global?.amountRefunded, 0n);
 });
 
-test("the second version has no address yet, so nothing is indexed for it", async () => {
+test("an event from an address that is not one of Viky's contracts is not indexed", async () => {
   const indexer = createTestIndexer();
   await assert.rejects(
     indexer.process({
-      chains: { 143: { simulate: [{ contract: "GiftEscrowV2", event: "GiftFunded", srcAddress: DAILY_V2, block: { number: BLOCK }, params: { giftId: 4n, amount: 7_000_004n } }] } },
+      chains: { 143: { simulate: [{ contract: "GiftEscrowV2", event: "GiftFunded", srcAddress: NOT_VIKYS, block: { number: BLOCK }, params: { giftId: 4n, amount: 7_000_004n } }] } },
     }),
     /never reached a handler/,
   );

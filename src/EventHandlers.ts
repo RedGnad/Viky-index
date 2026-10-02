@@ -54,6 +54,10 @@ type Counters = {
   amountRefunded?: bigint;
   exits?: number;
   exitAmountIn?: bigint;
+  // The anchor of agreements: counted on the whole only, a day and a condition hold no such column.
+  consentKeysBound?: number;
+  yesAnchored?: number;
+  stopsAnchored?: number;
 };
 
 function emptyDay(id: string): DayStat {
@@ -76,7 +80,7 @@ function emptyDay(id: string): DayStat {
 }
 
 function emptyGlobal(): GlobalStat {
-  return { ...emptyDay(GLOBAL_ID), eventsIndexed: 0 };
+  return { ...emptyDay(GLOBAL_ID), consentKeysBound: 0, yesAnchored: 0, stopsAnchored: 0, eventsIndexed: 0 };
 }
 
 function emptyCondition(contract: string, goalType: number, kind: "daily" | "milestone"): ConditionStat {
@@ -744,4 +748,42 @@ indexer.onEvent({ contract: "ExitRouter", event: "Exited" }, async ({ event, con
     amountOut: payout.amountOut + event.params.amountOut,
   });
   await bump(context, event.block.timestamp, { exits: 1, exitAmountIn: event.params.amountIn });
+});
+
+// ---------------------------------------------------------------------------------------------------------------
+// ConsentAnchor: the agreement of the person a gift is for, written down in public (second version)
+// ---------------------------------------------------------------------------------------------------------------
+
+/** The contract's two kinds, in words. Anything else is refused by the contract itself and never emitted. */
+const CONSENT_KINDS: Record<number, string> = { 1: "yes", 2: "stop" };
+
+indexer.onEvent({ contract: "ConsentAnchor", event: "ConsentKeyBound" }, async ({ event, context }) => {
+  const account = event.params.account.toLowerCase();
+  context.ConsentKey.set({
+    id: account,
+    account,
+    key: event.params.key,
+    at: timestampOf(event.block.timestamp),
+    block: BigInt(event.block.number),
+    transaction: event.transaction.hash,
+  });
+  await bump(context, event.block.timestamp, { consentKeysBound: 1 });
+});
+
+indexer.onEvent({ contract: "ConsentAnchor", event: "ConsentAnchored" }, async ({ event, context }) => {
+  const kind = CONSENT_KINDS[Number(event.params.kind)] ?? `kind ${event.params.kind}`;
+  context.ConsentEntry.set({
+    id: eventKey(event.chainId, event.block.number, event.logIndex),
+    account: event.params.account.toLowerCase(),
+    giftId: event.params.giftId,
+    kind,
+    sequence: Number(event.params.sequence),
+    digest: event.params.digest,
+    signatureR: event.params.signatureR,
+    signatureS: event.params.signatureS,
+    at: timestampOf(event.block.timestamp),
+    block: BigInt(event.block.number),
+    transaction: event.transaction.hash,
+  });
+  await bump(context, event.block.timestamp, kind === "yes" ? { yesAnchored: 1 } : kind === "stop" ? { stopsAnchored: 1 } : {});
 });

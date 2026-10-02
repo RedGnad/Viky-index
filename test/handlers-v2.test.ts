@@ -1,40 +1,34 @@
 /**
- * The handlers of the second version of the gift contracts, run over events written here (Envio's test indexer).
+ * The handlers of the second version of the gift contracts and of the anchor of agreements, run over events written
+ * here (Envio's test indexer), on the committed configuration: since 2 Oct 2026 it holds the three deployed addresses.
  *
- * The committed configuration gives the second version no address, so nothing is indexed for it. This file runs the
- * same configuration with an address for each of the two, exactly as it will be filled at their deployment: it writes
- * that configuration to a folder of its own and runs from there. What it pins: the same handlers read both versions
- * where they agree, a gift of the second version is created with its opening key, and an ending is its own status,
- * gives its days back without calling them missed, and counts the money once, on the transfer.
+ * What it pins: the same handlers read both versions where they agree, a gift of the second version is created with
+ * its opening key, an ending is its own status, gives its days back without calling them missed, and counts the
+ * money once, on the transfer; and a consent key, a yes and a stop are each written down with their place.
  */
 import assert from "node:assert/strict";
-import { mkdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
-import { join, resolve } from "node:path";
+import { readFileSync } from "node:fs";
 import test from "node:test";
+import { createTestIndexer } from "envio";
 
-const DAILY_V2 = "0x00000000000000000000000000000000000d0002";
+const DAILY_V2 = "0xc83d8028347967fc84d0e36ae5876d9b29eaec51";
 const MILESTONE_V1 = "0x8dc281ac8a1c789fdb65a063b9225e98ec522f0e";
-const MILESTONE_V2 = "0x00000000000000000000000000000000000e0002";
+const MILESTONE_V2 = "0x493c87a27e637bbc7179c17be2b215fc18523cc0";
+const ANCHOR = "0x2a15df23ff62120700f14d1e5d5d56ca0dad027e";
 const FUNDER = "0x00000000000000000000000000000000000000f1";
 const RECIPIENT = "0x00000000000000000000000000000000000000a1";
 const OPENING_KEY = "0x00000000000000000000000000000000000000c1";
 const HASH = `0x${"11".repeat(32)}`;
 const BLOCK = 110_000_000;
 
-// The committed configuration, with the two addresses the deployment will give.
-const root = resolve(import.meta.dirname, "..");
-const folder = join(root, ".envio", "test-v2");
-rmSync(folder, { recursive: true, force: true });
-mkdirSync(folder, { recursive: true });
-const committed = readFileSync(join(root, "config.yaml"), "utf8");
-const filled = committed
-  .replace("      - name: GiftEscrowV2\n", `      - name: GiftEscrowV2\n        address: "${DAILY_V2}"\n        start_block: ${BLOCK}\n`)
-  .replace("      - name: MilestoneGiftV2\n", `      - name: MilestoneGiftV2\n        address: "${MILESTONE_V2}"\n        start_block: ${BLOCK}\n`);
-assert.notEqual(filled, committed, "the committed configuration lists the second version with no address");
-writeFileSync(join(folder, "config.yaml"), filled);
-for (const name of ["abis", "src", "schema.graphql", "node_modules", "package.json"]) symlinkSync(join(root, name), join(folder, name));
-process.chdir(folder);
-const { createTestIndexer } = await import("envio");
+test("the committed configurations hold the three deployed addresses, each from its own block", () => {
+  for (const file of ["config.yaml", "config.rpc.yaml"]) {
+    const config = readFileSync(file, "utf8");
+    assert.match(config, /- name: GiftEscrowV2\n {8}address: "0xC83d8028347967Fc84D0e36Ae5876d9b29EAEc51"\n {8}start_block: 109877558\n/, file);
+    assert.match(config, /- name: MilestoneGiftV2\n {8}address: "0x493c87A27E637bBc7179C17bE2B215fC18523CC0"\n {8}start_block: 109877586\n/, file);
+    assert.match(config, /- name: ConsentAnchor\n {8}address: "0x2a15DF23fF62120700f14D1E5d5d56CA0dAd027e"\n {8}start_block: 109877728\n/, file);
+  }
+});
 
 test("a daily gift of the second version: created with its opening key, read, then ended by the person it is for", async () => {
   const indexer = createTestIndexer();
@@ -97,4 +91,39 @@ test("a milestone gift of the second version is ended: the whole amount goes bac
   assert.equal(global?.giftsEnded, 1);
   assert.equal(global?.giftsCreated, 2);
   assert.equal(global?.amountRefunded, 5_000_000n);
+});
+
+
+test("the anchor of agreements: a key bound to an account, then a yes and a stop at their places", async () => {
+  const indexer = createTestIndexer();
+  const KEY = `0x${"22".repeat(32)}`;
+  const R = `0x${"33".repeat(32)}`;
+  const S = `0x${"44".repeat(32)}`;
+  await indexer.process({
+    chains: {
+      143: {
+        simulate: [
+          { contract: "ConsentAnchor", event: "ConsentKeyBound", srcAddress: ANCHOR, block: { number: BLOCK }, params: { account: RECIPIENT, key: KEY } },
+          { contract: "ConsentAnchor", event: "ConsentAnchored", srcAddress: ANCHOR, block: { number: BLOCK + 1 }, params: { account: RECIPIENT, giftId: 4n, kind: 1n, sequence: 0n, digest: HASH, signatureR: R, signatureS: S } },
+          { contract: "ConsentAnchor", event: "ConsentAnchored", srcAddress: ANCHOR, block: { number: BLOCK + 2 }, params: { account: RECIPIENT, giftId: 4n, kind: 2n, sequence: 1n, digest: HASH, signatureR: R, signatureS: S } },
+        ],
+      },
+    },
+  });
+  const key = await indexer.ConsentKey.get(RECIPIENT);
+  assert.equal(key?.key, KEY);
+  assert.equal(key?.account, RECIPIENT);
+  const entries = (await indexer.ConsentEntry.getAll()).sort((a, b) => a.sequence - b.sequence);
+  assert.deepEqual(entries.map((entry) => [entry.kind, entry.sequence, entry.giftId, entry.account]), [["yes", 0, 4n, RECIPIENT], ["stop", 1, 4n, RECIPIENT]]);
+  assert.equal(entries[0].digest, HASH);
+  assert.equal(entries[0].signatureR, R);
+  assert.equal(entries[0].signatureS, S);
+  const global = await indexer.GlobalStat.get("global");
+  assert.equal(global?.consentKeysBound, 1);
+  assert.equal(global?.yesAnchored, 1);
+  assert.equal(global?.stopsAnchored, 1);
+  assert.equal(global?.eventsIndexed, 3);
+  // It moves no money and no gift: nothing else is counted.
+  assert.equal(global?.giftsCreated, 0);
+  assert.equal(global?.amountRefunded, 0n);
 });

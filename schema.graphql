@@ -238,6 +238,33 @@ type PayoutStat {
   amountOut: BigInt!
 }
 
+# The key an account signs its agreements with, bound once on the anchor by the account's own signature.
+type ConsentKey {
+  id: ID! # the account
+  account: String! @index
+  key: String!
+  at: Timestamp!
+  block: BigInt!
+  transaction: String!
+}
+
+# One yes or one stop of an account for a gift, at its place in that gift's sequence (0 is the first). The digest is
+# the hash of the text that was agreed to; the two halves of the signature are the consent key's own over it.
+type ConsentEntry {
+  id: ID!
+  account: String! @index
+  giftId: BigInt! @index
+  # "yes" or "stop"
+  kind: String! @index
+  sequence: Int!
+  digest: String!
+  signatureR: String!
+  signatureS: String!
+  at: Timestamp!
+  block: BigInt!
+  transaction: String!
+}
+
 type GlobalStat {
   id: ID! # "global"
   giftsCreated: Int!
@@ -253,5 +280,9 @@ type GlobalStat {
   amountRefunded: BigInt!
   exits: Int!
   exitAmountIn: BigInt!
+  # the anchor of agreements: keys bound, and every yes and every stop written down
+  consentKeysBound: Int!
+  yesAnchored: Int!
+  stopsAnchored: Int!
   eventsIndexed: Int!
 }
