@@ -100,14 +100,27 @@ endpoint is a parameter in the URL (`?endpoint=`), so the same page reads a loca
 
 Envio's hosted service deploys this repository from the branch `envio` (config `config.yaml`, root `./`, Development
 plan; every push to that branch makes a new deployment with a new endpoint id, so `main` moves ahead for anything
-that is not the indexer). Deployment `796f011` of 23 Sep 2026, 07:44 CEST, HyperSync, synced to the head in one
-minute, endpoint public:
+that is not the indexer).
+
+The deployment in service is `47c0fbc`, of 2 Oct 2026, 13:47 CEST: the seven contracts, HyperSync, synced to the head
+in one minute, endpoint public:
 
 ```
-https://indexer.dev.hyperindex.xyz/8213f52/v1/graphql
+https://indexer.dev.hyperindex.xyz/26195ec/v1/graphql
 ```
 
-Read at 05:49 UTC the same day: `_meta` at the head (progress block equal to the source block), 84 events processed;
-`scripts/compare-counts.ts` against `artifacts/counts-on-chain-rpc1.json`: every line the same;
-`scripts/check-gifts-on-chain.ts`: every gift equal to its contract's storage (`artifacts/hosted-2026-09-23/`).
-The page reads that endpoint by default: https://redgnad.github.io/Viky-index/page/ (GitHub Pages from `main`).
+Read the same day at block 109,886,535: `_meta` at the head, 168 events processed (the 131 of the first four contracts
+and the 37 goal registrations of the two new ones); `scripts/check-gifts-on-chain.ts`: every gift equal to its
+contract's storage. No gift had been made on the second version yet, and nothing was written on the anchor.
+
+The first deployment, `796f011` of 23 Sep 2026 (`https://indexer.dev.hyperindex.xyz/8213f52/v1/graphql`, measured in
+`docs/measured-2026-09-23.md`), indexes the first four contracts only.
+
+**How long it stays.** On the Development plan a deployment lives thirty days at most, then runs seven more, is
+read-only for three, and is deleted (Envio's pricing page, read on 2 Oct 2026). So `796f011` goes from 23 Oct 2026 and
+`47c0fbc` from 1 Nov 2026. To stay hosted past that: push `envio` again before the limit, which makes a new deployment
+with a new endpoint id that every reader must then be given, or move the indexer to a Production plan, whose endpoint
+does not change (from 70 dollars a month, read in the account on 2 Oct 2026).
+
+The page reads the endpoint in service by default: https://redgnad.github.io/Viky-index/page/ (GitHub Pages from
+`main`).
