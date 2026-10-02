@@ -4,6 +4,9 @@
 #   GiftEscrow, the earlier contract     0xE04CD59bB93765333200a9da01df83149D4C4d67, first event at block 103,644,003 (its deployment; read on 23 Sep 2026)
 #   MilestoneGift                        0x8dc281Ac8a1c789fdb65a063b9225E98eC522F0e, deployed at block 105,654,716 (17 Sep 2026)
 #   ExitRouter                           0x8a1790DfD10CF1599bDaeD5eC8BB46B2A6eB6223, deployed at block 105,185,369 (16 Sep 2026)
+#   GiftEscrowV2                         0xC83d8028347967Fc84D0e36Ae5876d9b29EAEc51, deployed at block 109,877,558 (2 Oct 2026)
+#   MilestoneGiftV2                      0x493c87A27E637bBc7179C17bE2B215fC18523CC0, deployed at block 109,877,586 (2 Oct 2026)
+#   ConsentAnchor                        0x2a15DF23fF62120700f14D1E5d5d56CA0dAd027e, deployed at block 109,877,728 (2 Oct 2026)
 # This file uses HyperSync (an ENVIO_API_TOKEN in .env, see .env.example). config.rpc.yaml is the same indexer over
 # the public RPC, for a run without a token.
 name: viky-index
@@ -44,12 +47,55 @@ contracts:
       - event: "EarnedWithdrawn(uint256 indexed giftId, address indexed recipient, address indexed to, uint256 amount)"
       - event: "UnearnedRefunded(uint256 indexed giftId, address indexed refundTo, uint256 amount)"
       - event: "GiftCancelled(uint256 indexed giftId, uint256 refunded)"
+  # The second version of the two gift contracts (the audit of 1 Oct 2026): a gift is opened with the key its link
+  # carries (openingKey in GiftCreated, where the first version had a contact hash), and the person it is for can end
+  # it (GiftEnded). Deployed on 2 Oct 2026: their addresses and blocks are under `chains`.
+  - name: GiftEscrowV2
+    abi_file_path: abis/GiftEscrowV2.json
+    handler: src/EventHandlers.ts
+    events:
+      - event: "GoalRegistered(uint8 indexed goalType, bytes32 indexed providerId)"
+      - event: "GiftCreated(uint256 indexed giftId, address indexed funder, address refundTo, address indexed openingKey, uint8 goalType, uint32 dailyTarget, uint32 durationDays, uint256 amount, uint256 perDay)"
+      - event: "GiftFunded(uint256 indexed giftId, uint256 amount)"
+      - event: "GiftClaimed(uint256 indexed giftId, address indexed recipient)"
+      - event: "IdentityBound(uint256 indexed giftId, address indexed recipient, bytes32 indexed identityHash)"
+      - event: "CheckInAccepted(uint256 indexed giftId, address indexed recipient, uint32 fromDay, uint32 toDay, uint32 creditedDays, uint64 metricValue, uint64 observedAt)"
+      - event: "DaysDrained(uint256 indexed giftId, uint32 fromDay, uint32 toDay, uint32 missedDays, uint256 amount)"
+      - event: "EarnedWithdrawn(uint256 indexed giftId, address indexed recipient, address indexed to, uint256 amount)"
+      - event: "UnearnedRefunded(uint256 indexed giftId, address indexed refundTo, uint256 amount)"
+      - event: "GiftCancelled(uint256 indexed giftId, uint256 refunded)"
+      - event: "GiftEnded(uint256 indexed giftId, address indexed recipient, uint256 kept, uint256 givenBack, uint32 givenBackDays)"
+      - event: "GiftFinalised(uint256 indexed giftId, uint32 creditedDays, uint32 drainedDays, uint256 dust)"
+  - name: MilestoneGiftV2
+    abi_file_path: abis/MilestoneGiftV2.json
+    handler: src/EventHandlers.ts
+    events:
+      - event: "GoalRegistered(uint8 indexed goalType, bytes32 indexed providerId, uint8 shape)"
+      - event: "GiftCreated(uint256 indexed giftId, address indexed funder, address refundTo, address indexed openingKey, uint8 goalType, uint8 shape, uint64 target, uint64 maximumStart, bytes32 subject, uint32 durationDays, uint256 amount, uint64 deadline)"
+      - event: "GiftFunded(uint256 indexed giftId, uint256 amount)"
+      - event: "GiftClaimed(uint256 indexed giftId, address indexed recipient)"
+      - event: "StartRecorded(uint256 indexed giftId, address indexed recipient, bytes32 indexed identityHash, uint64 startingValue, uint64 deadline)"
+      - event: "MilestoneReached(uint256 indexed giftId, address indexed recipient, uint64 metricValue, uint64 observedAt, uint256 amount)"
+      - event: "GiftExpired(uint256 indexed giftId, uint256 amount)"
+      - event: "GiftEnded(uint256 indexed giftId, address indexed recipient, uint256 kept, uint256 givenBack)"
+      - event: "EarnedWithdrawn(uint256 indexed giftId, address indexed recipient, address indexed to, uint256 amount)"
+      - event: "UnearnedRefunded(uint256 indexed giftId, address indexed refundTo, uint256 amount)"
+      - event: "GiftCancelled(uint256 indexed giftId, uint256 refunded)"
   - name: ExitRouter
     abi_file_path: abis/ExitRouter.json
     handler: src/EventHandlers.ts
     events:
       - event: "ExchangeAllowed(address indexed exchange, bool allowed, address mustPointAt)"
       - event: "Exited(address indexed payer, uint256 amountIn, address indexed tokenOut, uint256 amountOut, address indexed exchange)"
+  # Where the agreement of the person a gift is for is written down in public (the audit of 1 Oct 2026): a consent key
+  # bound once to an account by the account's own signature, then every yes and every stop at the next place of the
+  # gift's sequence. It moves no money: the index shows who agreed to what, and when.
+  - name: ConsentAnchor
+    abi_file_path: abis/ConsentAnchor.json
+    handler: src/EventHandlers.ts
+    events:
+      - event: "ConsentKeyBound(address indexed account, bytes32 indexed key)"
+      - event: "ConsentAnchored(address indexed account, uint256 indexed giftId, uint8 kind, uint64 sequence, bytes32 digest, bytes32 signatureR, bytes32 signatureS)"
 
 chains:
   - id: 143
@@ -65,3 +111,14 @@ chains:
       - name: ExitRouter
         address: "0x8a1790DfD10CF1599bDaeD5eC8BB46B2A6eB6223"
         start_block: 105185369
+      # The second version and the anchor of agreements, deployed on 2 Oct 2026 from the Viky repository at commit
+      # c837bb6 (each block is the deployment's own, read from its receipt).
+      - name: GiftEscrowV2
+        address: "0xC83d8028347967Fc84D0e36Ae5876d9b29EAEc51"
+        start_block: 109877558
+      - name: MilestoneGiftV2
+        address: "0x493c87A27E637bBc7179C17bE2B215fC18523CC0"
+        start_block: 109877586
+      - name: ConsentAnchor
+        address: "0x2a15DF23fF62120700f14D1E5d5d56CA0dAd027e"
+        start_block: 109877728

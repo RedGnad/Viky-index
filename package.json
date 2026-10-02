@@ -1,7 +1,6 @@
 {
   "name": "viky-index",
   "version": "0.1.0",
-  "private": true,
   "description": "Viky's gifts, days, payouts and refunds on Monad, indexed from the contracts' own events with Envio HyperIndex",
   "license": "MIT",
   "type": "module",
@@ -14,6 +13,7 @@
     "start": "envio start",
     "stop": "envio stop",
     "typecheck": "tsc --noEmit",
+    "test": "tsx --test test/*.test.ts",
     "count:chain": "python3 scripts/count-on-chain.py",
     "compare:counts": "tsx scripts/compare-counts.ts",
     "check:gifts": "tsx scripts/check-gifts-on-chain.ts"
