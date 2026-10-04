@@ -21,7 +21,7 @@ function argument(name: string, fallback?: string): string | undefined {
 type GiftRow = {
   id: string;
   kind: "daily" | "milestone";
-  /** 1 or 2: which version of its contract holds the gift, and so which ABI reads its storage. */
+  /** 1, 2 or 3: which version of its contract holds the gift, and so which ABI reads its storage. */
   version: number;
   status: string;
   amount: string;
@@ -58,8 +58,9 @@ async function main(): Promise<void> {
   request.setHeader("User-Agent", "viky-index/0.1 (+https://github.com/RedGnad/Viky-index)");
   const provider = new JsonRpcProvider(request, 143, { staticNetwork: true });
   const abis = {
-    daily: { 1: JSON.parse(readFileSync("abis/GiftEscrow.json", "utf8")), 2: JSON.parse(readFileSync("abis/GiftEscrowV2.json", "utf8")) },
-    milestone: { 1: JSON.parse(readFileSync("abis/MilestoneGift.json", "utf8")), 2: JSON.parse(readFileSync("abis/MilestoneGiftV2.json", "utf8")) },
+    daily: { 1: JSON.parse(readFileSync("abis/GiftEscrow.json", "utf8")), 2: JSON.parse(readFileSync("abis/GiftEscrowV2.json", "utf8")), 3: JSON.parse(readFileSync("abis/GiftEscrowV3.json", "utf8")) },
+    // A milestone gift has no third version: the third is the daily contract alone.
+    milestone: { 1: JSON.parse(readFileSync("abis/MilestoneGift.json", "utf8")), 2: JSON.parse(readFileSync("abis/MilestoneGiftV2.json", "utf8")), 3: JSON.parse(readFileSync("abis/MilestoneGiftV2.json", "utf8")) },
   };
 
   const gifts = await giftsFromIndex();
@@ -73,7 +74,7 @@ async function main(): Promise<void> {
   for (const gift of gifts) {
     const [contract, giftId] = gift.id.split("-");
     // A record made before the index kept the version is a gift of the first.
-    const version = gift.version === 2 ? 2 : 1;
+    const version = gift.version === 3 ? 3 : gift.version === 2 ? 2 : 1;
     const abi = abis[gift.kind][version];
     const stored = await new Contract(contract, abi, provider).getGift(BigInt(giftId));
     console.log(`${gift.kind} gift ${giftId} on ${contract} (index status: ${gift.status})`);
@@ -87,14 +88,14 @@ async function main(): Promise<void> {
       line("cancelled", stored.cancelled, gift.status === "cancelled");
       // An ending finalises the gift in the contract's storage, and the index says which of the two it was.
       line("finalised", stored.finalised, gift.status === "finalised" || gift.status === "ended");
-      if (version === 2) {
+      if (version >= 2) {
         line("given back days", stored.givenBackDays, gift.daysGivenBack);
         line("ended", stored.endedAt > 0n, gift.status === "ended");
       }
     } else {
       line("earned", stored.earned, gift.amountEarned);
       line("cancelled", stored.cancelled, gift.status === "cancelled");
-      if (version === 2) line("ended", stored.endedAt > 0n, gift.status === "ended");
+      if (version >= 2) line("ended", stored.endedAt > 0n, gift.status === "ended");
     }
     console.log(`    refundable still held: ${stored.refundable} (not an event sum; shown for the reader)`);
   }

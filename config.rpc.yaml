@@ -7,6 +7,7 @@
 #   GiftEscrowV2                         0xC83d8028347967Fc84D0e36Ae5876d9b29EAEc51, deployed at block 109,877,558 (2 Oct 2026)
 #   MilestoneGiftV2                      0x493c87A27E637bBc7179C17bE2B215fC18523CC0, deployed at block 109,877,586 (2 Oct 2026)
 #   ConsentAnchor                        0x2a15DF23fF62120700f14D1E5d5d56CA0dAd027e, deployed at block 109,877,728 (2 Oct 2026)
+#   GiftEscrowV3                         0x591d76863177E70FfcA2C793212d4715A367Ec70, deployed at block 110,278,100 (3 Oct 2026)
 # This variant reads the chain through the public RPC https://rpc1.monad.xyz, which answered a 4.3-million-block eth_getLogs
 # in half a second on 23 Sep 2026 (https://rpc.monad.xyz caps the range at 100 blocks, and Envio's sequential sync over it
 # measured 20 blocks a second). No token needed. config.yaml is the HyperSync one.
@@ -53,6 +54,24 @@ contracts:
   # it (GiftEnded). Deployed on 2 Oct 2026: their addresses and blocks are under `chains`.
   - name: GiftEscrowV2
     abi_file_path: abis/GiftEscrowV2.json
+    handler: src/EventHandlers.ts
+    events:
+      - event: "GoalRegistered(uint8 indexed goalType, bytes32 indexed providerId)"
+      - event: "GiftCreated(uint256 indexed giftId, address indexed funder, address refundTo, address indexed openingKey, uint8 goalType, uint32 dailyTarget, uint32 durationDays, uint256 amount, uint256 perDay)"
+      - event: "GiftFunded(uint256 indexed giftId, uint256 amount)"
+      - event: "GiftClaimed(uint256 indexed giftId, address indexed recipient)"
+      - event: "IdentityBound(uint256 indexed giftId, address indexed recipient, bytes32 indexed identityHash)"
+      - event: "CheckInAccepted(uint256 indexed giftId, address indexed recipient, uint32 fromDay, uint32 toDay, uint32 creditedDays, uint64 metricValue, uint64 observedAt)"
+      - event: "DaysDrained(uint256 indexed giftId, uint32 fromDay, uint32 toDay, uint32 missedDays, uint256 amount)"
+      - event: "EarnedWithdrawn(uint256 indexed giftId, address indexed recipient, address indexed to, uint256 amount)"
+      - event: "UnearnedRefunded(uint256 indexed giftId, address indexed refundTo, uint256 amount)"
+      - event: "GiftCancelled(uint256 indexed giftId, uint256 refunded)"
+      - event: "GiftEnded(uint256 indexed giftId, address indexed recipient, uint256 kept, uint256 givenBack, uint32 givenBackDays)"
+      - event: "GiftFinalised(uint256 indexed giftId, uint32 creditedDays, uint32 drainedDays, uint256 dust)"
+  # The third version of the daily contract (3 Oct 2026): a day is paid the day it is read. Its events are the
+  # second version's, one for one (its verified ABI, read on 4 Oct 2026), so the same handlers read it.
+  - name: GiftEscrowV3
+    abi_file_path: abis/GiftEscrowV3.json
     handler: src/EventHandlers.ts
     events:
       - event: "GoalRegistered(uint8 indexed goalType, bytes32 indexed providerId)"
@@ -137,6 +156,11 @@ chains:
       - name: MilestoneGiftV2
         address: "0x493c87A27E637bBc7179C17bE2B215fC18523CC0"
         start_block: 109877586
+      # The third version of the daily contract, deployed on 3 Oct 2026 from the Viky repository at commit d8cbbd3
+      # (the block is the deployment's own, read from its receipt). New daily gifts are made on it, from number 1000.
+      - name: GiftEscrowV3
+        address: "0x591d76863177E70FfcA2C793212d4715A367Ec70"
+        start_block: 110278100
       - name: ConsentAnchor
         address: "0x2a15DF23fF62120700f14D1E5d5d56CA0dAd027e"
         start_block: 109877728

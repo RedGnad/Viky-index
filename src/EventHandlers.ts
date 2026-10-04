@@ -16,11 +16,17 @@ import { indexer, type ConditionStat, type DayStat, type Gift, type GlobalStat }
 const GLOBAL_ID = "global";
 
 /**
- * The two versions of each gift contract. The second (the audit of 1 Oct 2026) emits the same events as the first for
+ * The versions of each gift contract. The second (the audit of 1 Oct 2026) emits the same events as the first for
  * everything they share, so one handler serves both; what differs is registered apart: how a gift is created (an
- * opening key where the first version had a contact hash) and the ending by the person the gift is for.
+ * opening key where the first version had a contact hash) and the ending by the person the gift is for. The third
+ * version of the daily contract (3 Oct 2026: a day is paid the day it is read) emits the second's events, one for one.
  */
-const DAILY = ["GiftEscrow", "GiftEscrowV2"] as const;
+const DAILY = ["GiftEscrow", "GiftEscrowV2", "GiftEscrowV3"] as const;
+/** The daily contracts whose gifts are opened with a key and can be ended by the person they are for, and their version. */
+const DAILY_WITH_A_KEY = [
+  ["GiftEscrowV2", 2],
+  ["GiftEscrowV3", 3],
+] as const;
 const MILESTONE = ["MilestoneGift", "MilestoneGiftV2"] as const;
 
 function giftKey(contract: string, giftId: bigint): string {
@@ -207,7 +213,7 @@ indexer.onEvent({ contract: "GiftEscrow", event: "GiftCreated" }, async ({ event
   await bump(context, event.block.timestamp, { giftsCreated: 1 }, { contract, goalType: gift.goalType, kind: "daily" });
 });
 
-indexer.onEvent({ contract: "GiftEscrowV2", event: "GiftCreated" }, async ({ event, context }) => {
+for (const [name, version] of DAILY_WITH_A_KEY) indexer.onEvent({ contract: name, event: "GiftCreated" }, async ({ event, context }) => {
   const contract = event.srcAddress.toLowerCase();
   const gift: Gift = {
     id: giftKey(contract, event.params.giftId),
@@ -216,7 +222,7 @@ indexer.onEvent({ contract: "GiftEscrowV2", event: "GiftCreated" }, async ({ eve
     kind: "daily",
     funder: event.params.funder.toLowerCase(),
     refundTo: event.params.refundTo.toLowerCase(),
-    version: 2,
+    version,
     recipientContactHash: undefined,
     openingKey: event.params.openingKey.toLowerCase(),
     goalType: Number(event.params.goalType),
@@ -412,11 +418,11 @@ for (const name of DAILY) {
 }
 
 /**
- * The person a daily gift is for ends it (second version only). What was counted stays theirs; the days neither
+ * The person a daily gift is for ends it (from the second version on). What was counted stays theirs; the days neither
  * counted nor missed are given back, which is neither earned nor a miss. The transfer to the funder's side is the
  * UnearnedRefunded of the same transaction, counted there.
  */
-indexer.onEvent({ contract: "GiftEscrowV2", event: "GiftEnded" }, async ({ event, context }) => {
+for (const [name] of DAILY_WITH_A_KEY) indexer.onEvent({ contract: name, event: "GiftEnded" }, async ({ event, context }) => {
   const contract = event.srcAddress.toLowerCase();
   const gift = await context.Gift.get(giftKey(contract, event.params.giftId));
   const givenBackDays = Number(event.params.givenBackDays);

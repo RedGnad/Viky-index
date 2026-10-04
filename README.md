@@ -11,7 +11,7 @@ No secret lives here. The only credential the indexer may use, an Envio API toke
 
 ## What is indexed
 
-Seven contracts on Monad mainnet (chain 143). The first four, addresses and deployment blocks read from the chain on
+Eight contracts on Monad mainnet (chain 143). The first four, addresses and deployment blocks read from the chain on
 23 Sep 2026:
 
 | Contract | Address | From block |
@@ -38,6 +38,21 @@ The two gift contracts emit the same events as the first version for everything 
 serve both. What differs: a gift is created with `openingKey` (the address of the key its link carries) where the
 first version had a contact hash, and the person a gift is for can end it (`GiftEnded`, the `Ending` entity, the
 gift's status `ended`, `daysGivenBack`, `giftsEnded` in the three aggregates).
+
+### The third version of the daily contract
+
+Deployed on 3 Oct 2026 from the Viky repository at commit `d8cbbd3`, the block read from its deployment's receipt:
+
+| Contract | Address | From block |
+|---|---|---|
+| `GiftEscrowV3` | `0x591d76863177E70FfcA2C793212d4715A367Ec70` | 110,278,100 |
+
+A day is paid the day it is read, and new daily gifts are made on it, from number 1000. It emits the second version's
+events, one for one (its ABI is the one verified on MonadVision's Sourcify, an exact match, read on 4 Oct 2026; a test
+holds the two lists of events equal), so the same handlers read it and a gift made on it carries `version: 3`.
+
+It is in the configuration since 4 Oct 2026. The deployment in service, below, was made before it and does not hold
+it: it is indexed from the next push of the branch `envio`.
 
 The anchor moves no money. It is where the agreement of the person a gift is for is written down in public: a consent
 key bound once to an account by the account's own signature (`ConsentKeyBound`, the `ConsentKey` entity), then every

@@ -28,7 +28,7 @@ type Gift {
   contract: String! @index
   giftId: BigInt! @index
   kind: GiftKind! @index
-  # 1 or 2: which version of its contract holds it
+  # 1, 2 or 3: which version of its contract holds it (3 is the daily contract alone)
   version: Int! @index
   funder: String! @index
   refundTo: String!
