@@ -11,7 +11,7 @@ No secret lives here. The only credential the indexer may use, an Envio API toke
 
 ## What is indexed
 
-Seven contracts on Monad mainnet (chain 143). The first four, addresses and deployment blocks read from the chain on
+Eight contracts on Monad mainnet (chain 143). The first four, addresses and deployment blocks read from the chain on
 23 Sep 2026:
 
 | Contract | Address | From block |
@@ -38,6 +38,21 @@ The two gift contracts emit the same events as the first version for everything 
 serve both. What differs: a gift is created with `openingKey` (the address of the key its link carries) where the
 first version had a contact hash, and the person a gift is for can end it (`GiftEnded`, the `Ending` entity, the
 gift's status `ended`, `daysGivenBack`, `giftsEnded` in the three aggregates).
+
+### The third version of the daily contract
+
+Deployed on 3 Oct 2026 from the Viky repository at commit `d8cbbd3`, the block read from its deployment's receipt:
+
+| Contract | Address | From block |
+|---|---|---|
+| `GiftEscrowV3` | `0x591d76863177E70FfcA2C793212d4715A367Ec70` | 110,278,100 |
+
+A day is paid the day it is read, and new daily gifts are made on it, from number 1000. It emits the second version's
+events, one for one (its ABI is the one verified on MonadVision's Sourcify, an exact match, read on 4 Oct 2026; a test
+holds the two lists of events equal), so the same handlers read it and a gift made on it carries `version: 3`.
+
+It is in the configuration since 4 Oct 2026. The deployment in service, below, was made before it and does not hold
+it: it is indexed from the next push of the branch `envio`.
 
 The anchor moves no money. It is where the agreement of the person a gift is for is written down in public: a consent
 key bound once to an account by the account's own signature (`ConsentKeyBound`, the `ConsentKey` entity), then every
@@ -100,14 +115,32 @@ endpoint is a parameter in the URL (`?endpoint=`), so the same page reads a loca
 
 Envio's hosted service deploys this repository from the branch `envio` (config `config.yaml`, root `./`, Development
 plan; every push to that branch makes a new deployment with a new endpoint id, so `main` moves ahead for anything
-that is not the indexer). Deployment `796f011` of 23 Sep 2026, 07:44 CEST, HyperSync, synced to the head in one
-minute, endpoint public:
+that is not the indexer).
+
+The deployment in service is `47c0fbc`, of 2 Oct 2026, 13:47 CEST: the seven contracts, HyperSync, synced to the head
+in one minute, endpoint public:
 
 ```
-https://indexer.dev.hyperindex.xyz/8213f52/v1/graphql
+https://indexer.dev.hyperindex.xyz/26195ec/v1/graphql
 ```
 
-Read at 05:49 UTC the same day: `_meta` at the head (progress block equal to the source block), 84 events processed;
-`scripts/compare-counts.ts` against `artifacts/counts-on-chain-rpc1.json`: every line the same;
-`scripts/check-gifts-on-chain.ts`: every gift equal to its contract's storage (`artifacts/hosted-2026-09-23/`).
-The page reads that endpoint by default: https://redgnad.github.io/Viky-index/page/ (GitHub Pages from `main`).
+Read the same day at block 109,886,535: `_meta` at the head, 168 events processed (the 131 of the first four contracts
+and the 37 goal registrations of the two new ones); `scripts/check-gifts-on-chain.ts`: every gift equal to its
+contract's storage. No gift had been made on the second version yet, and nothing was written on the anchor.
+
+The first deployment, `796f011` of 23 Sep 2026 (`https://indexer.dev.hyperindex.xyz/8213f52/v1/graphql`, measured in
+`docs/measured-2026-09-23.md`), indexes the first four contracts only.
+
+**How long it stays.** Envio's Development plan, as its pricing page says it (read on 2 Oct 2026): a deployment older
+than thirty days is deleted, and so is one over 20 GB. That is a hard limit: `796f011` goes on 23 Oct 2026, `47c0fbc`
+on 1 Nov 2026. There are soft limits too, whichever comes first: 100,000 events processed, 5 GB, or no request for
+seven days. Those start a grace period of seven days, then three days read-only, then deletion.
+
+The account shows a deployment's creation date and no end date. To stay hosted past the thirty days: push `envio`
+again before the limit, which makes a new deployment with thirty days of its own and a new endpoint id that every
+reader must then be given; or move the indexer to a Production plan (70, 300 or 800 dollars a month, read in the
+account on 2 Oct 2026). The account also offers to promote a deployment to a "static production endpoint", whose
+address stays the same across deployments: not tried.
+
+The page reads the endpoint in service by default: https://redgnad.github.io/Viky-index/page/ (GitHub Pages from
+`main`).

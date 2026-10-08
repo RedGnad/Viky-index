@@ -37,7 +37,7 @@
   <p class="lead">What Viky's contracts said, gift by gift and day by day, read from the Envio index of their own events. AUSD amounts are shown with six decimals, as the contracts count them.</p>
   <form id="endpointForm">
     <label for="endpoint">GraphQL endpoint</label>
-    <input id="endpoint" type="url" placeholder="https://indexer.dev.hyperindex.xyz/8213f52/v1/graphql" required>
+    <input id="endpoint" type="url" placeholder="https://indexer.dev.hyperindex.xyz/26195ec/v1/graphql" required>
     <button type="submit">Read</button>
     <span id="status"></span>
   </form>
@@ -63,7 +63,7 @@
   const status = document.getElementById("status");
   // The endpoint named in the page's own link, or the hosted one. An endpoint typed on an earlier visit is no longer
   // kept: it outlived the deployment it named, and the page then asked an endpoint that had stopped answering.
-  input.value = params.get("endpoint") || "https://indexer.dev.hyperindex.xyz/8213f52/v1/graphql";
+  input.value = params.get("endpoint") || "https://indexer.dev.hyperindex.xyz/26195ec/v1/graphql";
 
   const ausd = (v) => (Number(BigInt(v || 0)) / 1e6).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 6 });
   const short = (a) => a ? a.slice(0, 6) + "…" + a.slice(-4) : "";
