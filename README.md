@@ -117,30 +117,33 @@ Envio's hosted service deploys this repository from the branch `envio` (config `
 plan; every push to that branch makes a new deployment with a new endpoint id, so `main` moves ahead for anything
 that is not the indexer).
 
-The deployment in service is `47c0fbc`, of 2 Oct 2026, 13:47 CEST: the seven contracts, HyperSync, synced to the head
-in one minute, endpoint public:
+The deployment in service is `fcb0eab`, of 8 Oct 2026, 02:29 CEST: the eight contracts (the seven, and the third
+version of the daily contract), HyperSync, synced to the head in under a minute, endpoint public:
 
 ```
-https://indexer.dev.hyperindex.xyz/26195ec/v1/graphql
+https://indexer.dev.hyperindex.xyz/4ab80d5/v1/graphql
 ```
 
-Read the same day at block 109,886,535: `_meta` at the head, 168 events processed (the 131 of the first four contracts
-and the 37 goal registrations of the two new ones); `scripts/check-gifts-on-chain.ts`: every gift equal to its
-contract's storage. No gift had been made on the second version yet, and nothing was written on the anchor.
+Read the same day at block 111,467,859: 204 events processed; `scripts/check-gifts-on-chain.ts`: each of the fourteen
+gifts equal to its contract's storage, gift 1000 on the third daily contract and gift 1000006 on the second milestone
+contract among them.
 
-The first deployment, `796f011` of 23 Sep 2026 (`https://indexer.dev.hyperindex.xyz/8213f52/v1/graphql`, measured in
-`docs/measured-2026-09-23.md`), indexes the first four contracts only.
+The deployment before it, `47c0fbc` of 2 Oct 2026 (`https://indexer.dev.hyperindex.xyz/26195ec/v1/graphql`), indexes
+the seven contracts and not the third daily one. The first, `796f011` of 23 Sep 2026
+(`https://indexer.dev.hyperindex.xyz/8213f52/v1/graphql`, measured in `docs/measured-2026-09-23.md`), indexes the
+first four contracts only.
 
 **How long it stays.** Envio's Development plan, as its pricing page says it (read on 2 Oct 2026): a deployment older
 than thirty days is deleted, and so is one over 20 GB. That is a hard limit: `796f011` goes on 23 Oct 2026, `47c0fbc`
-on 1 Nov 2026. There are soft limits too, whichever comes first: 100,000 events processed, 5 GB, or no request for
+on 1 Nov 2026, `fcb0eab` on 7 Nov 2026. There are soft limits too, whichever comes first: 100,000 events processed, 5 GB, or no request for
 seven days. Those start a grace period of seven days, then three days read-only, then deletion.
 
 The account shows a deployment's creation date and no end date. To stay hosted past the thirty days: push `envio`
 again before the limit, which makes a new deployment with thirty days of its own and a new endpoint id that every
 reader must then be given; or move the indexer to a Production plan (70, 300 or 800 dollars a month, read in the
 account on 2 Oct 2026). The account also offers to promote a deployment to a "static production endpoint", whose
-address stays the same across deployments: not tried.
+address stays the same across deployments: pressed on 2 Oct 2026, it answers that the feature is not included in the
+Development plan.
 
 The page reads the endpoint in service by default: https://redgnad.github.io/Viky-index/page/ (GitHub Pages from
 `main`).
