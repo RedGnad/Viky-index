@@ -51,8 +51,7 @@ A day is paid the day it is read, and new daily gifts are made on it, from numbe
 events, one for one (its ABI is the one verified on MonadVision's Sourcify, an exact match, read on 4 Oct 2026; a test
 holds the two lists of events equal), so the same handlers read it and a gift made on it carries `version: 3`.
 
-It is in the configuration since 4 Oct 2026. The deployment in service, below, was made before it and does not hold
-it: it is indexed from the next push of the branch `envio`.
+It is in the configuration since 4 Oct 2026, and the deployment in service, below, holds it since 8 Oct 2026.
 
 The anchor moves no money. It is where the agreement of the person a gift is for is written down in public: a consent
 key bound once to an account by the account's own signature (`ConsentKeyBound`, the `ConsentKey` entity), then every
